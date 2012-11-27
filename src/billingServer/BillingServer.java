@@ -10,6 +10,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.AccessControlException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -19,7 +21,7 @@ public class BillingServer implements BillingServerInterface
 	// after correct login return a reference to the BillingServerSecure
 	// at shutdown close the BillingServerSecure too
 	
-	private BillingServerSecure secure;
+	private static BillingServerSecure secure;
 	
 	public BillingServer()
 	{
@@ -76,11 +78,10 @@ public class BillingServer implements BillingServerInterface
 		}
 		
 		// initialize the SecurityManager
-		/*if (System.getSecurityManager() == null)
-		{
-			System.setProperty("java.security.policy", "src/standard.policy");
-			System.setSecurityManager(new SecurityManager());
-		}*/
+		/*
+		 * if (System.getSecurityManager() == null) { System.setProperty("java.security.policy", "src/standard.policy"); System.setSecurityManager(new
+		 * SecurityManager()); }
+		 */
 		
 		BillingServerInterface stub = null;
 		
@@ -93,6 +94,7 @@ public class BillingServer implements BillingServerInterface
 		{
 			// TODO Auto-generated catch block
 			e2.printStackTrace();
+			System.exit(1);
 		}
 		
 		Registry registry = null;
@@ -137,10 +139,30 @@ public class BillingServer implements BillingServerInterface
 			System.exit(1);
 		}
 		
-		//start the BillingServerSecure
+		// start the BillingServerSecure
 		
+		// Thread billingServerSecure = new Thread(new BillingServerSecure());
 		
-		System.out.println("BillingServer ready.");
+		// billingServerSecure.start();
+		
+		secure = new BillingServerSecure();
+		
+		try
+		{
+			secure.bindRMI(hostname, port);
+		}
+		catch (RemoteException e1)
+		{
+			System.out.println("Error Binding the Billing Server Secure.");
+			e1.printStackTrace();
+		}
+		catch (AlreadyBoundException e1)
+		{
+			System.out.println("Billing Server Secure already bounded.");
+			e1.printStackTrace();
+		}
+		
+		System.out.println("BillingServer and BillingServerSecure ready.");
 		
 		// wait for !end to shutdown the server
 		
@@ -165,6 +187,7 @@ public class BillingServer implements BillingServerInterface
 		try
 		{
 			registry.unbind(rmiBindingName);
+			secure.unbindRMI();
 		}
 		catch (Exception e)
 		{
@@ -172,13 +195,83 @@ public class BillingServer implements BillingServerInterface
 			e.printStackTrace();
 		}
 		
-		System.out.println("BillingServer closed.");
+		System.out.println("BillingServer and BillingServerSecure closed.");
 		System.exit(0);
 	}
 	
-	public BillingServerSecure login(String username, String password) throws RemoteException
+	public BillingServerSecureInterface login(String username, String password) throws RemoteException
 	{
-		// TODO Auto-generated method stub
+		InputStream in = ClassLoader.getSystemResourceAsStream("user.properties");
+		
+		if (in == null)
+		{
+			System.out.println("Can't read from user.properties file");
+			return null;
+		}
+		
+		String savedPassword;
+		Properties pros = new Properties();
+		
+		try
+		{
+			pros.load(in);
+			savedPassword = pros.getProperty(username);
+			
+		}
+		catch (IOException e)
+		{
+			System.out.println("Could not read from the stream");
+			return null;
+		}
+		
+		try
+		{
+			in.close();
+		}
+		catch (IOException e)
+		{
+			System.out.println("Could not close the stream");
+			return null;
+		}
+		
+		if (savedPassword == null)
+		{
+			System.out.println("username or password are wrong.");
+			return null;
+		}
+		
+		// create MD5 hashed password
+		String md5password = "";
+		MessageDigest md5Handler;
+		try
+		{
+			md5Handler = MessageDigest.getInstance("MD5");
+			md5Handler.update(password.getBytes());
+			
+			byte[] md5Array = md5Handler.digest();
+			
+			StringBuffer hexString = new StringBuffer();
+			
+			for (int i = 0; i < md5Array.length; i++)
+			{
+				hexString.append(String.format("%02x", md5Array[i]));
+			}
+			
+			md5password = hexString.toString();
+		}
+		catch (NoSuchAlgorithmException e)
+		{
+			System.out.println("Some idiot typed the worng algorith name!");
+			e.printStackTrace();
+		}
+		
+		if (savedPassword.equals(md5password))
+		{
+			// successfully logged in
+			return secure.getStub();
+		}
+		
+		System.out.println("username or password are wrong.");
 		return null;
 	}
 }
