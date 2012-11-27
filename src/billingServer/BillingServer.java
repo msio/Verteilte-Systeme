@@ -76,11 +76,11 @@ public class BillingServer implements BillingServerInterface
 		}
 		
 		// initialize the SecurityManager
-		if (System.getSecurityManager() == null)
+		/*if (System.getSecurityManager() == null)
 		{
-			System.setProperty("java.security.policy", "standard.policy");
+			System.setProperty("java.security.policy", "src/standard.policy");
 			System.setSecurityManager(new SecurityManager());
-		}
+		}*/
 		
 		BillingServerInterface stub = null;
 		
@@ -125,7 +125,6 @@ public class BillingServer implements BillingServerInterface
 		}
 		catch (AccessControlException e)
 		{
-			
 			System.out.println("Something went wrong with the security policy.");
 			e.printStackTrace();
 			System.exit(1);
@@ -135,7 +134,11 @@ public class BillingServer implements BillingServerInterface
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.exit(1);
 		}
+		
+		//start the BillingServerSecure
+		
 		
 		System.out.println("BillingServer ready.");
 		
