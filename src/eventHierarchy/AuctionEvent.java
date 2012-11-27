@@ -1,11 +1,10 @@
 package eventHierarchy;
 
-public class AuctionEvent extends Event
+public class AuctionEvent extends Event implements EventTypeConstants
 {
 	private final long auctionId;
 	
-	public static final String AUCTION_STARTED = "AUCTION_STARTED";
-	public static final String AUCTION_ENDED = "AUCTION_ENDED";
+	
 	
 	public AuctionEvent(String id, String type, long timestamp, long auctionId) throws IllegalArgumentException 
 	{

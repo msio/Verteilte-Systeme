@@ -1,14 +1,12 @@
 package eventHierarchy;
 
-public class BidEvent extends Event
+public class BidEvent extends Event implements EventTypeConstants
 {
 	private final String userName;
 	private final long auctionId;
 	private final double price;
 	
-	public static final String BID_PLACED = "BID_PLACED";
-	public static final String BID_OVERBID = "BID_OVERBID";
-	public static final String BID_WON = "BID_WON";
+	
 	
 	public BidEvent(String id, String type, long timestamp, String userName, long auctionId, double price) throws IllegalArgumentException
 	{

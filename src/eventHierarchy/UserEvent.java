@@ -1,12 +1,9 @@
 package eventHierarchy;
 
-public class UserEvent extends Event
+public class UserEvent extends Event implements EventTypeConstants
 {
 	private final String userName;
 	
-	public static final String USER_LOGIN = "USER_LOGIN";
-	public static final String USER_LOGOUT = "USER_LOGOUT";
-	public static final String USER_DISCONNECTED = "USER_DISCONNECTED";
 	
 	public UserEvent(String id, String type, long timestamp, String userName) throws IllegalArgumentException
 	{
