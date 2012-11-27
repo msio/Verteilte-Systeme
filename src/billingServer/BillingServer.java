@@ -1,5 +1,7 @@
 package billingServer;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.rmi.AccessException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
@@ -7,6 +9,8 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.AccessControlException;
+import java.util.Properties;
 import java.util.Scanner;
 
 public class BillingServer implements BillingServerInterface
@@ -15,6 +19,8 @@ public class BillingServer implements BillingServerInterface
 	// after correct login return a reference to the BillingServerSecure
 	// at shutdown close the BillingServerSecure too
 	
+	private BillingServerSecure secure;
+	
 	public BillingServer()
 	{
 		super();
@@ -22,25 +28,59 @@ public class BillingServer implements BillingServerInterface
 	
 	public static void main(String args[])
 	{
+		// read the binding name
 		String rmiBindingName = "";
 		
-		if(args.length == 1)
+		if (args.length == 1)
 		{
 			rmiBindingName = args[0];
 		}
 		else
 		{
-			System.out.println("Usage:\n"+
-						"java BillingServer <rmiBindingName>\n"+
-						"rmiBindingName: RMI Binding Name of the Billing Server");
+			System.out.println("Usage:\n" + "java BillingServer <rmiBindingName>\n" + "rmiBindingName: RMI Binding Name of the Billing Server");
 			System.exit(1);
 		}
 		
-		//initialize the SecurityManager		
+		InputStream in = ClassLoader.getSystemResourceAsStream("registry.properties");
+		
+		if (in == null)
+		{
+			System.out.println("Can't read from registry.properties file");
+			System.exit(1);
+		}
+		
+		int port = 0;
+		String hostname = "";
+		Properties pros = new Properties();
+		
+		try
+		{
+			pros.load(in);
+			port = Integer.valueOf(pros.getProperty("registry.port"));
+			hostname = pros.getProperty("registry.host");
+			
+		}
+		catch (IOException e)
+		{
+			System.out.println("Could not read from the stream");
+		}
+		
+		try
+		{
+			in.close();
+		}
+		catch (IOException e)
+		{
+			System.out.println("Could not close the stream");
+			System.exit(1);
+		}
+		
+		// initialize the SecurityManager
 		if (System.getSecurityManager() == null)
 		{
-            System.setSecurityManager(new SecurityManager());
-        }
+			System.setProperty("java.security.policy", "standard.policy");
+			System.setSecurityManager(new SecurityManager());
+		}
 		
 		BillingServerInterface stub = null;
 		
@@ -59,20 +99,20 @@ public class BillingServer implements BillingServerInterface
 		
 		try
 		{
-			//look for RMI Registry
-			registry = LocateRegistry.getRegistry();
+			// look for RMI Registry
+			registry = LocateRegistry.getRegistry(hostname, port);
 			
-			//bind the remote object to the rmi register
+			// bind the remote object to the rmi register
 			registry.bind(rmiBindingName, stub);
 		}
-		catch (Exception e) //RemoteException e)
+		catch (RemoteException e) // RemoteException e)
 		{
 			try
 			{
-				//if the RMI Registry does not exist, create one on the standard port 1099!
-				registry = LocateRegistry.createRegistry(1099);
+				// if the RMI Registry does not exist, create one at the specific port!
+				registry = LocateRegistry.createRegistry(port);
 				
-				//bind the remote object to the rmi register
+				// bind the remote object to the rmi register
 				registry.rebind(rmiBindingName, stub);
 			}
 			catch (RemoteException e1)
@@ -83,21 +123,34 @@ public class BillingServer implements BillingServerInterface
 				System.exit(1);
 			}
 		}
+		catch (AccessControlException e)
+		{
+			
+			System.out.println("Something went wrong with the security policy.");
+			e.printStackTrace();
+			System.exit(1);
+			
+		}
+		catch (AlreadyBoundException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		System.out.println("BillingServer ready.");
 		
-		//wait for !end to shutdown the server
+		// wait for !end to shutdown the server
 		
 		Scanner scan = new Scanner(System.in);
 		
-		//Block until Enter for next Line is pressed
+		// Block until Enter for next Line is pressed
 		boolean end = false;
 		
-		while(!end)
+		while (!end)
 		{
 			String msg = scan.next();
 			
-			if(msg.equals("!end"))
+			if (msg.equals("!end"))
 			{
 				end = true;
 			}
@@ -105,7 +158,7 @@ public class BillingServer implements BillingServerInterface
 		
 		scan.close();
 		
-		//unbind the rmi object
+		// unbind the rmi object
 		try
 		{
 			registry.unbind(rmiBindingName);
@@ -115,7 +168,6 @@ public class BillingServer implements BillingServerInterface
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 		
 		System.out.println("BillingServer closed.");
 		System.exit(0);
