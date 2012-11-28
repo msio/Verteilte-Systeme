@@ -16,6 +16,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import billingServer.BillingServerSecureInterface;
+
 import eventHierarchy.AuctionEvent;
 import eventHierarchy.BidEvent;
 import eventHierarchy.EventTypeConstants;
@@ -38,8 +40,9 @@ public class ServerConnection implements EventTypeConstants
 	private Timer timer;
 	private ArrayList<ServerClientConnection> clientConnectionList;
 	private AnalyticsInterface analyticsServer;
+	private BillingServerSecureInterface billingServerSecure;
 	
-	public ServerConnection(int tcpPortNumber,AnalyticsInterface analyticsServer)
+	public ServerConnection(int tcpPortNumber,AnalyticsInterface analyticsServer, BillingServerSecureInterface billingServerSecure)
 	{
 		try
 		{
@@ -61,6 +64,7 @@ public class ServerConnection implements EventTypeConstants
 		udpMessageList = new HashMap<String, String>();
 		clientConnectionList = new ArrayList<ServerClientConnection>();
 		this.analyticsServer = analyticsServer;
+		this.billingServerSecure = billingServerSecure;
 		
 		// Start the auction status handler
 		AuctionStatusThread statusThread = new AuctionStatusThread(this);
@@ -220,10 +224,12 @@ public class ServerConnection implements EventTypeConstants
 		return true;
 	}
 	
+	/* TODO: not used in exercise 2
 	public synchronized void addUdpMessage(String userName, String message)
 	{
 		udpMessageList.put(userName, message);
 	}
+	*/
 	
 	/* TODO: not used in exercise 2
 	public synchronized void sendUdpMessages()
@@ -298,8 +304,10 @@ public class ServerConnection implements EventTypeConstants
 					} 
 					
 					// highest bidder
+					/* TODO: not used in exercise 2
 					addUdpMessage(auction.getHighestBidder(),
 							"!auction-end " + highestBidder + " " + auction.getCurrentPrice() + " " + auction.getDescription());
+					*/
 				}
 				else
 				{
@@ -315,7 +323,12 @@ public class ServerConnection implements EventTypeConstants
 				} 
 				
 				// owner
+				/* TODO: not used in exercise 2
 				addUdpMessage(auction.getOwner(), "!auction-end " + highestBidder + " " + auction.getCurrentPrice() + " " + auction.getDescription());
+				*/
+				
+				//send Bill Auction to the Billing Server Secure
+				sendBillAuction(auction.getOwner(), auction.getId(), auction.getCurrentPrice());
 				
 				// delete auction, so nobody can bid anymore
 				iter.remove();
@@ -327,6 +340,18 @@ public class ServerConnection implements EventTypeConstants
 	public synchronized void addServerClientConnection(ServerClientConnection con)
 	{
 		clientConnectionList.add(con);
+	}
+	
+	public synchronized void sendBillAuction(String user, long auctionID, double price)
+	{
+		try
+		{
+			billingServerSecure.billAuction(user, auctionID, price);
+		}
+		catch (RemoteException e)
+		{
+			System.out.println("Cant send billAuction for auction: " + auctionID +".");
+		}
 	}
 	
 	public void closeConnection()

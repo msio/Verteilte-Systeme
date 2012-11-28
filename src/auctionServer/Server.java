@@ -7,6 +7,9 @@ import java.rmi.registry.Registry;
 import java.util.Properties;
 import java.util.Scanner;
 
+import billingServer.BillingServerInterface;
+import billingServer.BillingServerSecureInterface;
+
 import analyticsserver.AnalyticsInterface;
 
 
@@ -17,7 +20,7 @@ public class Server
 		int tcpPortNumber = 0;
 		int registryPort = 0;
 		String registryHost = null;
-		String analyticsBinginName = null;
+		String analyticsBindingName = null;
 		String billingBindingName = null;
 		
 		
@@ -26,7 +29,7 @@ public class Server
 			try
 			{
 				tcpPortNumber = Integer.parseInt(args[0]);
-				analyticsBinginName= args[1];
+				analyticsBindingName= args[1];
 				billingBindingName= args[2];
 				
 			}
@@ -80,27 +83,46 @@ public class Server
 				//reference to remote object AnalyticsServer
 				
 				AnalyticsInterface analyticsServer = null;
+				BillingServerInterface billingServer = null;
 				
 				try{
 					
 					
 					
 					Registry registry = LocateRegistry.getRegistry(registryHost,registryPort);
+					
 					//analytics server
-					analyticsServer = (AnalyticsInterface) registry.lookup(analyticsBinginName);
+					analyticsServer = (AnalyticsInterface) registry.lookup(analyticsBindingName);
 					// billing server
-					//---------------- HIER INSERT ----------------------
+					billingServer = (BillingServerInterface) registry.lookup(billingBindingName);
+
+					analyticsServer = (AnalyticsInterface) registry.lookup(analyticsBindingName);
+					
 					
 					
 				}catch(Exception e){
 					
 					System.out.println("Error connection to AnalyticsServer" + e);
 				}
+				
+
+		//login to Billing Server, to get a Billing Server Secure
+		
+		BillingServerSecureInterface billingServerSecure = null;
+		
+		try
+		{
+			billingServerSecure = billingServer.login("auctionClientUser", "EinPasswort");
+		}
+		catch (RemoteException e)
+		{
+			System.out.println("Cant login into BillingServer.");
+		}
 		
 		
 		// pass remote object AnalyticsServer to ServerConnection 
 				
-		ServerConnection con = new ServerConnection(tcpPortNumber,analyticsServer);
+		ServerConnection con = new ServerConnection(tcpPortNumber,analyticsServer, billingServerSecure);
 		
 		Thread t1 = new Thread(new ServerConnectionHandler(con));
 		t1.start();
