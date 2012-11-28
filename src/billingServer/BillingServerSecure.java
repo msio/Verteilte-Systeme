@@ -14,9 +14,13 @@ public class BillingServerSecure implements BillingServerSecureInterface //, Run
 	private final static String rmiBindingName = "BillingServerSecureRef";
 	private BillingServerSecureInterface stub;
 	
+	private PriceSteps priceSteps;
+	
 	BillingServerSecure()
 	{
 		super();
+		
+		priceSteps = new PriceSteps();
 	}
 	
 	/*public void run()
@@ -60,25 +64,42 @@ public class BillingServerSecure implements BillingServerSecureInterface //, Run
 	
 	public PriceSteps getPriceSteps() throws RemoteException
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return priceSteps;
 	}
 
-	public void createPriceStep(double startPrice, double endPrice, double fixedPice, double variablePricePercent) throws RemoteException
+	public void createPriceStep(double startPrice, double endPrice, double fixedPrice, double variablePricePercent) throws RemoteException
 	{
-		// TODO Auto-generated method stub
+		if(startPrice < 0 || endPrice < 0 || fixedPrice < 0 || variablePricePercent < 0)
+			throw new RemoteException();
+		
+		try
+		{
+			priceSteps.addStep(startPrice, endPrice, fixedPrice, variablePricePercent);
+		}
+		catch (IllegalArgumentException e)
+		{
+			//startPrice or endPrice collides with an excisting price Step
+			throw new RemoteException();
+		}
 		
 	}
 
 	public void deletPriceStep(double startPrice, double endPrice) throws RemoteException
 	{
-		// TODO Auto-generated method stub
+		try
+		{
+			priceSteps.deleteStep(startPrice, endPrice);
+		}
+		catch (IllegalArgumentException e)
+		{
+			throw new RemoteException();
+		}
 		
 	}
 
 	public void billAuction(String user, long auctionID, double price) throws RemoteException
 	{
-		// TODO Auto-generated method stub
+		
 		
 	}
 

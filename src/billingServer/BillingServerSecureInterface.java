@@ -1,13 +1,14 @@
 package billingServer;
 
+import java.io.Serializable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-public interface BillingServerSecureInterface extends Remote
+public interface BillingServerSecureInterface extends Remote, Serializable 
 {
 	public PriceSteps getPriceSteps() throws RemoteException;
 	
-	public void createPriceStep(double startPrice, double endPrice, double fixedPice, double variablePricePercent) throws RemoteException;
+	public void createPriceStep(double startPrice, double endPrice, double fixedPrice, double variablePricePercent) throws RemoteException;
 	
 	public void deletPriceStep(double startPrice, double endPrice) throws RemoteException;
 	
