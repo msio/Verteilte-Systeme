@@ -11,7 +11,7 @@ public interface AnalyticsInterface extends Remote{
 			
 		public String subscribe(ManagementClientInterface client) throws RemoteException;
 		
-		public void unsubscribe(ManagementClientInterface client) throws RemoteException;
+		public boolean unsubscribe(String ID) throws RemoteException;
 		
 		public void processEvent(Event event) throws RemoteException;
 }

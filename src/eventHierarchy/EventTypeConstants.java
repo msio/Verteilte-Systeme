@@ -1,6 +1,6 @@
 package eventHierarchy;
 
-public abstract interface EventTypeConstants {
+public  interface EventTypeConstants {
 
 	
 	public static final String AUCTION_STARTED = "AUCTION_STARTED";
@@ -21,5 +21,7 @@ public abstract interface EventTypeConstants {
 	public static final String USER_LOGOUT = "USER_LOGOUT";
 	public static final String USER_DISCONNECTED = "USER_DISCONNECTED";
 	
+	public static final String ALL_EVENTS[] ={AUCTION_STARTED,AUCTION_ENDED,AUCTION_SUCCESS_RATIO,AUCTION_TIME_AVG,BID_COUNT_PER_MINUTE,BID_OVERBID,BID_PLACED,BID_PRICE_MAX,BID_WON,USER_DISCONNECTED,USER_LOGIN,USER_LOGOUT,USER_SESSIONTIME_AVG,USER_SESSIONTIME_MAX,USER_SESSIONTIME_MIN}; 
 	
+	public static final int NUMBER_OF_ALL_EVENTS=15;
 }
