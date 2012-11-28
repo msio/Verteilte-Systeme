@@ -11,7 +11,7 @@ import java.util.Scanner;
 
 import eventHierarchy.Event;
 
-public class AnalyticsServer implements AnalyticsInterface{
+public class AnalyticsServer {
 
 	public AnalyticsServer(){
 		
@@ -72,8 +72,8 @@ public class AnalyticsServer implements AnalyticsInterface{
 				
 				
 				
-				AnalyticsInterface serverObj = new AnalyticsServer();
-			   AnalyticsInterface stub = (AnalyticsInterface) UnicastRemoteObject.exportObject(serverObj, 0);
+				AnalyticsServerImp	 analyticsObj = new AnalyticsServerImp();
+			   //AnalyticsInterface stub = (AnalyticsInterface) UnicastRemoteObject.exportObject(analyticsObj, 0);
 				
 			  
 				
@@ -91,7 +91,7 @@ public class AnalyticsServer implements AnalyticsInterface{
 				//}
 				 
 				// bind the object to the registry	
-				registry.rebind(rmiBindingName, stub);
+				registry.rebind(rmiBindingName, analyticsObj);
 				
 				
 			}catch(Exception e2){
@@ -135,23 +135,10 @@ public class AnalyticsServer implements AnalyticsInterface{
 			
 		}
 
-	@Override
-	public String subscribe(String regex) throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	@Override
-	public void unsubscribe(String ID) throws RemoteException {
-		// TODO Auto-generated method stub
-		
-	}
+	
 
-	@Override
-	public void processEvent(Event event) throws RemoteException {
-		// TODO Auto-generated method stub
-		System.out.println(event.getType());
-	}
+	
 	
 
 }
