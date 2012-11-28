@@ -11,9 +11,9 @@ public class AuctionEvent extends Event implements EventTypeConstants
 		super(id, type, timestamp);
 		this.auctionId = auctionId;
 		
-		if(!type.equals(AUCTION_STARTED) || !type.equals(AUCTION_ENDED))
+		if(!(type.equals(AUCTION_STARTED) || type.equals(AUCTION_ENDED)))
 		{
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("Invalid auction event");
 		}
 	}
 	

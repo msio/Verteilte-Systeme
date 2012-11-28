@@ -12,7 +12,7 @@ public class UserEvent extends Event implements EventTypeConstants
 		
 		if(!(type.equals(USER_LOGIN) || type.equals(USER_LOGOUT) || type.equals(USER_DISCONNECTED)))
 		{
-			throw new IllegalArgumentException("User Event");
+			throw new IllegalArgumentException("invalid user event");
 		}
 	}
 	

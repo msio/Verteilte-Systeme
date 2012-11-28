@@ -15,9 +15,9 @@ public class BidEvent extends Event implements EventTypeConstants
 		this.auctionId = auctionId;
 		this.price = price;
 		
-		if(!type.equals(BID_PLACED) || !type.equals(BID_OVERBID) || !type.equals(BID_WON))
+		if(!(type.equals(BID_PLACED) || type.equals(BID_OVERBID) || type.equals(BID_WON)))
 		{
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("Invalid bid event");
 		}
 	}
 	
