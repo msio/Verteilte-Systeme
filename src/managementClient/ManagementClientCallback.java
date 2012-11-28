@@ -19,9 +19,9 @@ public class ManagementClientCallback extends UnicastRemoteObject implements Man
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public String processEvent(Event event) throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
+	public void processEvent(Event event) throws RemoteException {
+		
+		System.out.println(event.getType());
 	}
 
 	@Override

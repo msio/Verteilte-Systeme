@@ -84,6 +84,8 @@ public class ManagementClient {
 			
 		}
 		
+		 // ---- PASS BILLING SERVER OBJECT IN ManagementClientImp 
+		
 		ManagementClientImp clientImp = new ManagementClientImp(analyticsServer);
 		
 		

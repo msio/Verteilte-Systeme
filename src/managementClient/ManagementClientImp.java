@@ -2,6 +2,8 @@ package managementClient;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import analyticsserver.AnalyticsInterface;
 
@@ -31,19 +33,46 @@ public class ManagementClientImp {
 	
 	public void subscribe(){
 		
-		 try {
-			ID =analyticsServer.subscribe(new ManagementClientCallback(regex));
+		ManagementClientCallback clientCallback=null;
+		try {
+			clientCallback = new ManagementClientCallback(getRegex());
 		} catch (RemoteException e) {
-			System.out.println("ERROR: Subscription Failed");
+			System.out.println("ERROR Create Managmenent.. ");
 			e.printStackTrace();
 		}
+		
+		 
+			try {
+				ID = analyticsServer.subscribe(clientCallback);
+			} catch (RemoteException e) {
+				System.out.println("ERROR Subscribtion Failed ");
+				e.printStackTrace();
+			}
+		
+			
 	
 	}
 	
-	// 
-	public void unsubscribe(){
+	private String getRegex(){
 		
-		//analyticsServer.unsubscribe();
+		return regex;
+	}
+	
+	// 
+	public boolean unsubscribe(){
+		
+		boolean unsub=false;
+		
+		try {
+			
+			unsub=analyticsServer.unsubscribe(ID);
+		
+		} catch (RemoteException e) {
+			
+			System.out.println("ERROR: Unsubscribtion Failed");
+		}
+		
+		return unsub;
 	}
 	
 	public String checkCommand(String command){
@@ -69,22 +98,57 @@ public class ManagementClientImp {
 		
 		}else if (command.contains(SUBSCRIBE)){
 			
+			String[] subs = command.split(" ");
+			
+			if(subs.length != 2){
+				
+				return "ERROR: Invalid Number Of Command Arguments";
+			}
+			
+			if(!checkRegexString(subs[1])){
+				return "ERROR: Invalid Regular Expression String";
+			}
+			
+			this.regex=subs[1];
+			
 			subscribe();
+			
 			
 			if(ID != null){
 				
-				return "";
+				return "Subscription Not Created";
+			}else{
+				
+				return "Created Subscription With "+ ID +" For Events Using Filter " + regex;
 			}
 		
 		}else if (command.contains(UNSUBSCRIBE)){
-			//input code
-		
-		}else{
 			
-			return "ERROR: Invalid Command";
+			
+			if(unsubscribe()){
+				
+				return "Subscription "+ID+ " terminated" ;
+			}else{
+				
+				return "Subscription "+ID+ " Not terminated" ;
+			}
+		
 		}
 		
-		return null;
+		return "ERROR:  Invalid Command";
+	}
+	
+	private boolean checkRegexString(String regex){
+		boolean checkRegex;
+		
+		try{
+			
+			Pattern.compile(regex);
+			checkRegex=true;
+		}catch(PatternSyntaxException e){
+			checkRegex=false;
+		}
+		return checkRegex;
 	}
 	
 }
