@@ -7,6 +7,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 
 public class BillingServerSecure implements BillingServerSecureInterface //, Runnable
 {
@@ -15,12 +16,14 @@ public class BillingServerSecure implements BillingServerSecureInterface //, Run
 	private BillingServerSecureInterface stub;
 	
 	private PriceSteps priceSteps;
+	private ArrayList<BillCreator> billCreators;
 	
 	BillingServerSecure()
 	{
 		super();
 		
 		priceSteps = new PriceSteps();
+		billCreators = new ArrayList<BillCreator>();
 	}
 	
 	/*public void run()
@@ -99,13 +102,36 @@ public class BillingServerSecure implements BillingServerSecureInterface //, Run
 
 	public void billAuction(String user, long auctionID, double price) throws RemoteException
 	{
+		for(BillCreator billElements : billCreators)
+		{
+			if(billElements.getUsername().equals(user))
+			{
+				billElements.addAuction(auctionID, price);
+				return;
+			}
+		}
 		
+		BillCreator newCreator = new BillCreator(user);
+		newCreator.addAuction(auctionID, price);
+		
+		billCreators.add(newCreator);
 		
 	}
 
 	public Bill getBill(String user) throws RemoteException
 	{
-		// TODO Auto-generated method stub
-		return null;
+		Bill bill;
+		
+		for(BillCreator billElements : billCreators)
+		{
+			if(billElements.getUsername().equals(user))
+			{
+				bill = billElements.createBill(priceSteps);
+				return bill;
+			}
+		}
+		
+		System.out.println("No User with the name: " + user + ".");
+		throw new RemoteException();
 	}
 }

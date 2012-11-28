@@ -21,21 +21,36 @@ public class PriceSteps implements Serializable
 				throw new IllegalArgumentException();
 		}
 		
-		priceSteps.add(new PriceStep(startPrice, endPrice, fixedPrice, variablePricePercent));
+		double correctedEndPrice = endPrice;
+		if(endPrice == 0)
+		{
+			correctedEndPrice = Double.POSITIVE_INFINITY;
+		}
+		
+		
+		priceSteps.add(new PriceStep(startPrice, correctedEndPrice, fixedPrice, variablePricePercent));
+		
+		
 		
 	}
 	
 	public void deleteStep(double startPrice, double endPrice) throws IllegalArgumentException
 	{
+		double correctedEndPrice = endPrice;
+		if(endPrice == 0)
+		{
+			correctedEndPrice = Double.POSITIVE_INFINITY;
+		}
+		
 		// get an Iterator
-		Iterator itr = priceSteps.iterator();
+		Iterator<PriceStep> itr = priceSteps.iterator();
 		
 		PriceStep step;
 		while (itr.hasNext())
 		{
 			step = (PriceStep) itr.next();
 			
-			if (step.getStartPrice() == startPrice && step.getEndPrice() == endPrice)
+			if (step.getStartPrice() == startPrice && step.getEndPrice() == correctedEndPrice)
 			{
 				itr.remove();
 				return;
@@ -46,4 +61,29 @@ public class PriceSteps implements Serializable
 		throw new IllegalArgumentException();
 	}
 	
+	public double findFixedFee(double price)
+	{
+		for(PriceStep step : priceSteps)
+		{
+			if(step.getStartPrice() <= price && price <= step.getEndPrice())
+			{
+				return step.getFixedPrice();
+			}
+		}
+		
+		return 0;
+	}
+	
+	public double findVariableFeePercent(double price)
+	{
+		for(PriceStep step : priceSteps)
+		{
+			if(step.getStartPrice() <= price && price <= step.getEndPrice())
+			{
+				return step.getVariablePricePercent();
+			}
+		}
+		
+		return 0;
+	}
 }

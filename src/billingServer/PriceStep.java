@@ -25,4 +25,14 @@ public class PriceStep
 		return endPrice;
 	}
 	
+	public double getFixedPrice()
+	{
+		return fixedPrice;
+	}
+	
+	public double getVariablePricePercent()
+	{
+		return variablePricePercent;
+	}
+	
 }
