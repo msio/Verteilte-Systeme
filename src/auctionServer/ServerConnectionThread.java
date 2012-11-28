@@ -5,6 +5,7 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 
 import eventHierarchy.AuctionEvent;
+import eventHierarchy.BidEvent;
 import eventHierarchy.EventTypeConstants;
 import eventHierarchy.UserEvent;
 
@@ -16,7 +17,7 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 	private ServerClientConnection con;
 	private String currentUser;
 	private AnalyticsInterface analyticsServer;
-	private static int ID = 0;
+
 	
 	public ServerConnectionThread(Socket socket, ServerConnection serverConnection)
 	{
@@ -30,10 +31,7 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 		//this.analyticsServer = serverConnection.getAnalyticsServer();
 	}
 	
-	private synchronized String getID(){
-		
-		return "AS"+ID++;
-	}
+	
 	
 	private long getCurrentTimeStamp(){
 		
@@ -73,7 +71,7 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 						else
 						{
 							currentUser = sub[1];
-						 analyticsServer.processEvent(new UserEvent(getID() ,USER_LOGIN, getCurrentTimeStamp() , currentUser.toString()));
+						 analyticsServer.processEvent(new UserEvent(IDgenerator.getID() ,USER_LOGIN, getCurrentTimeStamp() , currentUser.toString()));
 							con.sendMessage("Successfully logged in as " + sub[1] + "!");
 						}
 						}
@@ -102,7 +100,7 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 						else
 						{
 							// Logged out correctly!
-							analyticsServer.processEvent(new UserEvent(getID(), USER_LOGOUT, getCurrentTimeStamp(), currentUser.toString()));
+							analyticsServer.processEvent(new UserEvent(IDgenerator.getID(), USER_LOGOUT, getCurrentTimeStamp(), currentUser.toString()));
 							con.sendMessage("Successfully logged out as " + currentUser + "!");
 						}
 						
@@ -157,7 +155,7 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 							serverConnection.addAuction(auction);
 								
 								// send notification to the analytics server
-								analyticsServer.processEvent(new AuctionEvent(getID(), AUCTION_STARTED, getCurrentTimeStamp(), (long)auction.getId()));
+								analyticsServer.processEvent(new AuctionEvent(IDgenerator.getID(), AUCTION_STARTED, getCurrentTimeStamp(), (long)auction.getId()));
 							
 							
 							
@@ -188,10 +186,25 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 							Auction oldAuction = serverConnection.getAuction(id);
 							String oldHighestBidder = oldAuction.getHighestBidder();
 							
+							
+							if((oldAuction != null) && (oldHighestBidder == null)){
+							
+								// BID_PLACED send to the analytics server
+								analyticsServer.processEvent(new BidEvent(IDgenerator.getID(), BID_PLACED, getCurrentTimeStamp(), currentUser.toString(), id, amount));
+							}
+							
 							if (serverConnection.bidOnAuction(currentUser, id, amount))
 							{
-								// successfully bided on the auction
+								// successfully overbided on the auction
 								Auction auction = serverConnection.getAuction(id);
+								
+								// BID_PLACED send to the analytics server
+								analyticsServer.processEvent(new BidEvent(IDgenerator.getID(), BID_PLACED, getCurrentTimeStamp(), currentUser.toString(), id, amount));
+								
+								
+								//OVERBID send to the analytics server
+								
+								analyticsServer.processEvent(new BidEvent(IDgenerator.getID(),BID_OVERBID, getCurrentTimeStamp(), currentUser.toString(), id, amount));
 								con.sendMessage("You successfully bid with " + amount + " on '" + auction.getDescription() + "'.");
 								
 								if (oldHighestBidder != null)
@@ -200,6 +213,9 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 									/* TODO: not needed in exercise 2
 									serverConnection.addUdpMessage(oldHighestBidder, "!overbid " + auction.getDescription());
 									*/
+									
+		
+									
 								}
 							}
 							else
@@ -242,7 +258,7 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 			try {
 				
 				if(currentUser != null){
-				 analyticsServer.processEvent(new UserEvent(getID(), USER_DISCONNECTED, getCurrentTimeStamp(), currentUser.toString()));
+				 analyticsServer.processEvent(new UserEvent(IDgenerator.getID(), USER_DISCONNECTED, getCurrentTimeStamp(), currentUser.toString()));
 				}
 			
 			} catch (Exception e1) {
@@ -259,7 +275,7 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 				
 				try {
 					
-					analyticsServer.processEvent(new UserEvent(getID(),"USER_LOGOUT", getCurrentTimeStamp(), currentUser.toString()));
+					analyticsServer.processEvent(new UserEvent(IDgenerator.getID(),"USER_LOGOUT", getCurrentTimeStamp(), currentUser.toString()));
 				
 				} catch (Exception e) {
 					e.printStackTrace();

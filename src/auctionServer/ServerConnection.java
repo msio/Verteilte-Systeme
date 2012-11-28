@@ -16,11 +16,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import eventHierarchy.AuctionEvent;
+import eventHierarchy.BidEvent;
+import eventHierarchy.EventTypeConstants;
 import eventHierarchy.UserEvent;
 
 import analyticsserver.AnalyticsInterface;
 
-public class ServerConnection 
+public class ServerConnection implements EventTypeConstants
 {
 	
 	private ServerSocket serverSocket;
@@ -285,6 +288,15 @@ public class ServerConnection
 				
 				if (highestBidder != null)
 				{
+					
+					//BID_WON send notification  to the analytics server
+					try {
+						analyticsServer.processEvent(new BidEvent(IDgenerator.getID(), BID_WON, System.currentTimeMillis(), highestBidder, auction.getId(), auction.getCurrentPrice()));
+					} catch (Exception e) {
+						System.out.println("BID_WON processEvent ");
+						e.printStackTrace();
+					} 
+					
 					// highest bidder
 					addUdpMessage(auction.getHighestBidder(),
 							"!auction-end " + highestBidder + " " + auction.getCurrentPrice() + " " + auction.getDescription());
@@ -293,6 +305,14 @@ public class ServerConnection
 				{
 					highestBidder = "none";
 				}
+				
+				//AUCTION_ENDED send notification to the analytics server
+				try {
+					analyticsServer.processEvent(new AuctionEvent(IDgenerator.getID(),AUCTION_ENDED,System.currentTimeMillis(), auction.getId()));
+				} catch (Exception e) {
+					System.out.println("AUCTION ENDED processEvent");
+					e.printStackTrace();
+				} 
 				
 				// owner
 				addUdpMessage(auction.getOwner(), "!auction-end " + highestBidder + " " + auction.getCurrentPrice() + " " + auction.getDescription());
