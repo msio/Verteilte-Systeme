@@ -1,7 +1,13 @@
 package eventHierarchy;
 
-public abstract class Event
+import java.io.Serializable;
+
+public abstract class Event implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final String id;
 	private final String type;
 	private final long timestamp;

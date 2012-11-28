@@ -1,13 +1,23 @@
 package auctionServer;
 import java.io.IOException;
 import java.net.Socket;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 
-public class ServerConnectionThread implements Runnable
+import eventHierarchy.AuctionEvent;
+import eventHierarchy.BidEvent;
+import eventHierarchy.EventTypeConstants;
+import eventHierarchy.UserEvent;
+
+import analyticsserver.AnalyticsInterface;
+
+public class ServerConnectionThread implements Runnable,EventTypeConstants 
 {
 	private final ServerConnection serverConnection;
 	private ServerClientConnection con;
 	private String currentUser;
+	private AnalyticsInterface analyticsServer;
+
 	
 	public ServerConnectionThread(Socket socket, ServerConnection serverConnection)
 	{
@@ -18,7 +28,16 @@ public class ServerConnectionThread implements Runnable
 		currentUser = null;
 		
 		this.serverConnection.addServerClientConnection(con);
+		//this.analyticsServer = serverConnection.getAnalyticsServer();
 	}
+	
+	
+	
+	private long getCurrentTimeStamp(){
+		
+		
+		return System.currentTimeMillis();
+	} 
 	
 	public void run()
 	{
@@ -52,6 +71,7 @@ public class ServerConnectionThread implements Runnable
 						else
 						{
 							currentUser = sub[1];
+						 analyticsServer.processEvent(new UserEvent(IDgenerator.getID() ,USER_LOGIN, getCurrentTimeStamp() , currentUser.toString()));
 							con.sendMessage("Successfully logged in as " + sub[1] + "!");
 						}
 						}
@@ -80,6 +100,7 @@ public class ServerConnectionThread implements Runnable
 						else
 						{
 							// Logged out correctly!
+							analyticsServer.processEvent(new UserEvent(IDgenerator.getID(), USER_LOGOUT, getCurrentTimeStamp(), currentUser.toString()));
 							con.sendMessage("Successfully logged out as " + currentUser + "!");
 						}
 						
@@ -132,6 +153,11 @@ public class ServerConnectionThread implements Runnable
 							String endDate = auction.getEndDateString();
 							
 							serverConnection.addAuction(auction);
+								
+								// send notification to the analytics server
+								analyticsServer.processEvent(new AuctionEvent(IDgenerator.getID(), AUCTION_STARTED, getCurrentTimeStamp(), (long)auction.getId()));
+							
+							
 							
 							con.sendMessage("An auction '" + description + "' with id " + id + " has been created and will end on " + endDate + ".");
 						}
@@ -160,10 +186,25 @@ public class ServerConnectionThread implements Runnable
 							Auction oldAuction = serverConnection.getAuction(id);
 							String oldHighestBidder = oldAuction.getHighestBidder();
 							
+							
+							if((oldAuction != null) && (oldHighestBidder == null)){
+							
+								// BID_PLACED send to the analytics server
+								analyticsServer.processEvent(new BidEvent(IDgenerator.getID(), BID_PLACED, getCurrentTimeStamp(), currentUser.toString(), id, amount));
+							}
+							
 							if (serverConnection.bidOnAuction(currentUser, id, amount))
 							{
-								// successfully bided on the auction
+								// successfully overbided on the auction
 								Auction auction = serverConnection.getAuction(id);
+								
+								// BID_PLACED send to the analytics server
+								analyticsServer.processEvent(new BidEvent(IDgenerator.getID(), BID_PLACED, getCurrentTimeStamp(), currentUser.toString(), id, amount));
+								
+								
+								//OVERBID send to the analytics server
+								
+								analyticsServer.processEvent(new BidEvent(IDgenerator.getID(),BID_OVERBID, getCurrentTimeStamp(), currentUser.toString(), id, amount));
 								con.sendMessage("You successfully bid with " + amount + " on '" + auction.getDescription() + "'.");
 								
 								if (oldHighestBidder != null)
@@ -172,6 +213,9 @@ public class ServerConnectionThread implements Runnable
 									/* TODO: not needed in exercise 2
 									serverConnection.addUdpMessage(oldHighestBidder, "!overbid " + auction.getDescription());
 									*/
+									
+		
+									
 								}
 							}
 							else
@@ -208,14 +252,39 @@ public class ServerConnectionThread implements Runnable
 				
 			}
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
-			System.out.println("Server Connection Thread interrupt");
+			
+			try {
+				
+				if(currentUser != null){
+				 analyticsServer.processEvent(new UserEvent(IDgenerator.getID(), USER_DISCONNECTED, getCurrentTimeStamp(), currentUser.toString()));
+				}
+			
+			} catch (Exception e1) {
+				System.out.println("DISCONNECTED processEvent" + e1);
+			} 
+			
+			System.out.println("Server Connection Thread interrupt " + e);
 		}
 		finally
 		{
+			
 			// log the user out, if the Server gets stopped
-			serverConnection.logUserOut(currentUser);
+			if(serverConnection.logUserOut(currentUser)){
+				
+				try {
+					
+					analyticsServer.processEvent(new UserEvent(IDgenerator.getID(),"USER_LOGOUT", getCurrentTimeStamp(), currentUser.toString()));
+				
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.out.println("LOGOUT processEvent in finally" + e);
+				}
+		
+			}	
+			
+			
 			con.closeConnection();
 		}
 		

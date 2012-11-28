@@ -12,7 +12,7 @@
     <property name="client2.port" value="12612"/><!-- UDP port of 2nd Bidding Client -->
     <property name="client3.port" value="12613"/><!-- UDP port of 3rd Bidding Client -->
     <property name="mgmtclient.name" value="your.ManagementClient"/><!-- Management Client's full class name (including the package) -->
-    <property name="analytics.name" value="your.AnalyticsServer"/><!-- Analytics Server's full class name (including the package) -->
+    <property name="analytics.name" value="analyticsserver.AnalyticsServer"/><!-- Analytics Server's full class name (including the package) -->
     <property name="billing.name" value="billingServer.BillingServer"/><!-- Billing Server's full class name (including the package) -->
     <property name="analytics.bindingName" value="AnalyticsServerRef"/><!-- RMI Binding Name of the Analytics Server -->
     <property name="billing.bindingName" value="BillingServerRef"/><!-- RMI Binding Name of the Billing Server -->
@@ -35,7 +35,7 @@
     <target name="run-server" depends="compile" description="Run Auction Server.">
         <java classname="${server.name}" fork="true" classpathref="project.classpath">
             <arg value="${server.port}"/>
-            <arg value="${analytics.bindingName}"/>
+            <arg value="${analytics.bindingName}"/> 
             <arg value="${billing.bindingName}"/>
         </java>
     </target>

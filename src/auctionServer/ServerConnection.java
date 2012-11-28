@@ -5,6 +5,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -15,7 +16,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class ServerConnection
+import eventHierarchy.AuctionEvent;
+import eventHierarchy.BidEvent;
+import eventHierarchy.EventTypeConstants;
+import eventHierarchy.UserEvent;
+
+import analyticsserver.AnalyticsInterface;
+
+public class ServerConnection implements EventTypeConstants
 {
 	
 	private ServerSocket serverSocket;
@@ -29,8 +37,9 @@ public class ServerConnection
 	private HashMap<String, String> udpMessageList;
 	private Timer timer;
 	private ArrayList<ServerClientConnection> clientConnectionList;
+	private AnalyticsInterface analyticsServer;
 	
-	public ServerConnection(int tcpPortNumber)
+	public ServerConnection(int tcpPortNumber,AnalyticsInterface analyticsServer)
 	{
 		try
 		{
@@ -51,6 +60,7 @@ public class ServerConnection
 		auctionList = new ArrayList<Auction>();
 		udpMessageList = new HashMap<String, String>();
 		clientConnectionList = new ArrayList<ServerClientConnection>();
+		this.analyticsServer = analyticsServer;
 		
 		// Start the auction status handler
 		AuctionStatusThread statusThread = new AuctionStatusThread(this);
@@ -63,8 +73,18 @@ public class ServerConnection
 	{
 		Socket clientSocket = serverSocket.accept();
 		
-		pool.execute(new ServerConnectionThread(clientSocket, this));
+		pool.execute(new ServerConnectionThread(clientSocket,this));
 		
+	}
+	
+	/**
+	 * get Analytics Server
+	 * @return Analytics Server Interface
+	 */
+	
+	public AnalyticsInterface getAnalyticsServer(){
+		
+		return analyticsServer;
 	}
 	
 	/**
@@ -89,6 +109,7 @@ public class ServerConnection
 		return true;
 	}
 	
+	
 	/**
 	 * 
 	 * @param username
@@ -106,6 +127,9 @@ public class ServerConnection
 				{
 					return false;
 				}
+				
+				
+				
 				return true;
 			}
 		}
@@ -131,6 +155,8 @@ public class ServerConnection
 					{
 						return false;
 					}
+					
+					
 					return true;
 				}
 			}
@@ -262,6 +288,15 @@ public class ServerConnection
 				
 				if (highestBidder != null)
 				{
+					
+					//BID_WON send notification  to the analytics server
+					try {
+						analyticsServer.processEvent(new BidEvent(IDgenerator.getID(), BID_WON, System.currentTimeMillis(), highestBidder, auction.getId(), auction.getCurrentPrice()));
+					} catch (Exception e) {
+						System.out.println("BID_WON processEvent ");
+						e.printStackTrace();
+					} 
+					
 					// highest bidder
 					addUdpMessage(auction.getHighestBidder(),
 							"!auction-end " + highestBidder + " " + auction.getCurrentPrice() + " " + auction.getDescription());
@@ -270,6 +305,14 @@ public class ServerConnection
 				{
 					highestBidder = "none";
 				}
+				
+				//AUCTION_ENDED send notification to the analytics server
+				try {
+					analyticsServer.processEvent(new AuctionEvent(IDgenerator.getID(),AUCTION_ENDED,System.currentTimeMillis(), auction.getId()));
+				} catch (Exception e) {
+					System.out.println("AUCTION ENDED processEvent");
+					e.printStackTrace();
+				} 
 				
 				// owner
 				addUdpMessage(auction.getOwner(), "!auction-end " + highestBidder + " " + auction.getCurrentPrice() + " " + auction.getDescription());

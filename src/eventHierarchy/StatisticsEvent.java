@@ -9,11 +9,11 @@ public class StatisticsEvent extends Event implements EventTypeConstants
 		super(id, type, timestamp);
 		this.value = value;
 		
-		if(!type.equals(USER_SESSIONTIME_MIN) || !type.equals(USER_SESSIONTIME_MAX) || !type.equals(USER_SESSIONTIME_AVG) ||
-				!type.equals(BID_PRICE_MAX) || !type.equals(BID_COUNT_PER_MINUTE) ||
-				!type.equals(AUCTION_TIME_AVG) || !type.equals(AUCTION_SUCCESS_RATIO))
+		if(!(type.equals(USER_SESSIONTIME_MIN) || type.equals(USER_SESSIONTIME_MAX) || type.equals(USER_SESSIONTIME_AVG) ||
+				type.equals(BID_PRICE_MAX) || type.equals(BID_COUNT_PER_MINUTE) ||
+				type.equals(AUCTION_TIME_AVG) || type.equals(AUCTION_SUCCESS_RATIO)))
 		{
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("invalid statistics event");
 		}
 	}
 	
