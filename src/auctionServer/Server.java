@@ -114,7 +114,7 @@ public class Server
 		{
 			billingServerSecure = billingServer.login("auctionClientUser", "EinPasswort");
 		}
-		catch (RemoteException e)
+		catch (Exception e)
 		{
 			System.out.println("Cant login into BillingServer.");
 		}
