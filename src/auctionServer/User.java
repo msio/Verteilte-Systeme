@@ -18,6 +18,7 @@ public class User
 		address = null;
 	}
 	
+	
 	public String toString()
 	{
 		return username;
@@ -68,4 +69,6 @@ public class User
 	{
 		return address;
 	}
+	
+
 }

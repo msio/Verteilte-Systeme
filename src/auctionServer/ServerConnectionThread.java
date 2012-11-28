@@ -1,13 +1,21 @@
 package auctionServer;
 import java.io.IOException;
 import java.net.Socket;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 
-public class ServerConnectionThread implements Runnable
+import eventHierarchy.EventTypeConstants;
+import eventHierarchy.UserEvent;
+
+import analyticsserver.AnalyticsInterface;
+
+public class ServerConnectionThread implements Runnable,EventTypeConstants 
 {
 	private final ServerConnection serverConnection;
 	private ServerClientConnection con;
 	private String currentUser;
+	private AnalyticsInterface analyticsServer;
+	private static int ID = 0;
 	
 	public ServerConnectionThread(Socket socket, ServerConnection serverConnection)
 	{
@@ -18,8 +26,20 @@ public class ServerConnectionThread implements Runnable
 		currentUser = null;
 		
 		this.serverConnection.addServerClientConnection(con);
+		//this.analyticsServer = serverConnection.getAnalyticsServer();
 	}
 	
+	/*private String getID(){
+		
+		return "AS"+ID++;
+	}
+	
+	private long getCurrentTimeStamp(){
+		
+		
+		return System.currentTimeMillis();
+	} 
+	*/
 	public void run()
 	{
 		try
@@ -52,6 +72,7 @@ public class ServerConnectionThread implements Runnable
 						else
 						{
 							currentUser = sub[1];
+							//analyticsServer.processEvent(new UserEvent(getID() ,USER_LOGIN,getCurrentTimeStamp() , currentUser.toString()));
 							con.sendMessage("Successfully logged in as " + sub[1] + "!");
 						}
 						}
@@ -80,6 +101,7 @@ public class ServerConnectionThread implements Runnable
 						else
 						{
 							// Logged out correctly!
+							//analyticsServer.processEvent(new UserEvent(getID(), USER_LOGOUT, getCurrentTimeStamp(), currentUser.toString()));
 							con.sendMessage("Successfully logged out as " + currentUser + "!");
 						}
 						
@@ -208,14 +230,26 @@ public class ServerConnectionThread implements Runnable
 				
 			}
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
-			System.out.println("Server Connection Thread interrupt");
+			
+			try {
+				//analyticsServer.processEvent(new UserEvent(getID(), USER_DISCONNECTED, getCurrentTimeStamp(), currentUser.toString()));
+			} catch (Exception e1) {
+				System.out.println("ERROR processEvent" + e1);
+			} 
+			System.out.println("Server Connection Thread interrupt" + e);
 		}
 		finally
 		{
+			/*try {
+				analyticsServer.processEvent(new UserEvent(getID(),"USER_LOGOUT", getCurrentTimeStamp(), currentUser.toString()));
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.out.println("ERROR processEvent" + e);
+			}*/
 			// log the user out, if the Server gets stopped
-			serverConnection.logUserOut(currentUser);
+			serverConnection.logUserOut(currentUser);	
 			con.closeConnection();
 		}
 		

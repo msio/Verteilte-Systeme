@@ -5,6 +5,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -15,7 +16,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class ServerConnection
+import eventHierarchy.UserEvent;
+
+import analyticsserver.AnalyticsInterface;
+
+public class ServerConnection 
 {
 	
 	private ServerSocket serverSocket;
@@ -29,8 +34,9 @@ public class ServerConnection
 	private HashMap<String, String> udpMessageList;
 	private Timer timer;
 	private ArrayList<ServerClientConnection> clientConnectionList;
+	private AnalyticsInterface analyticsServer;
 	
-	public ServerConnection(int tcpPortNumber)
+	public ServerConnection(int tcpPortNumber,AnalyticsInterface analyticsServer)
 	{
 		try
 		{
@@ -51,6 +57,7 @@ public class ServerConnection
 		auctionList = new ArrayList<Auction>();
 		udpMessageList = new HashMap<String, String>();
 		clientConnectionList = new ArrayList<ServerClientConnection>();
+		this.analyticsServer = analyticsServer;
 		
 		// Start the auction status handler
 		AuctionStatusThread statusThread = new AuctionStatusThread(this);
@@ -63,8 +70,18 @@ public class ServerConnection
 	{
 		Socket clientSocket = serverSocket.accept();
 		
-		pool.execute(new ServerConnectionThread(clientSocket, this));
+		pool.execute(new ServerConnectionThread(clientSocket,this));
 		
+	}
+	
+	/**
+	 * get Analytics Server
+	 * @return Analytics Server Interface
+	 */
+	
+	public AnalyticsInterface getAnalyticsServer(){
+		
+		return analyticsServer;
 	}
 	
 	/**
@@ -89,6 +106,7 @@ public class ServerConnection
 		return true;
 	}
 	
+	
 	/**
 	 * 
 	 * @param username
@@ -105,6 +123,17 @@ public class ServerConnection
 				if (!listUser.userLogin(udpPort, address))
 				{
 					return false;
+				}
+				
+				try {
+					analyticsServer.processEvent(new UserEvent("ID","USER_LOGIN" , System.currentTimeMillis(), username.toString()));
+				} catch (RemoteException e) {
+					System.out.println("LOGIN processEvent: Remote Exception ");
+					e.printStackTrace();
+				
+				} catch (IllegalArgumentException e) {
+					System.out.println("LOGIN processEvent: Illegal Argument Exception");
+					e.printStackTrace();
 				}
 				return true;
 			}

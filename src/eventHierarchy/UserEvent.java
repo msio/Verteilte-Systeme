@@ -10,9 +10,9 @@ public class UserEvent extends Event implements EventTypeConstants
 		super(id, type, timestamp);
 		this.userName = userName;
 		
-		if(!type.equals(USER_LOGIN) || !type.equals(USER_LOGOUT) || !type.equals(USER_DISCONNECTED))
+		if(!(type.equals(USER_LOGIN) || type.equals(USER_LOGOUT) || type.equals(USER_DISCONNECTED)))
 		{
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("User Event");
 		}
 	}
 	

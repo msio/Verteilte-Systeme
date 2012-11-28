@@ -2,19 +2,22 @@ package analyticsserver;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 
 import eventHierarchy.Event;
 
 public class AnalyticsServerImp extends UnicastRemoteObject implements AnalyticsInterface {
 	
-	/**
-	 * 
-	 */
+	private ArrayList<Event> eventBuffer;
+	
+	
 	private static final long serialVersionUID = 1L;
 
 	public AnalyticsServerImp() throws RemoteException{
 		
 		super();
+		
+		eventBuffer = new ArrayList<Event>();
 	}
 
 	@Override
@@ -32,6 +35,8 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 	@Override
 	public void processEvent(Event event) throws RemoteException {
 		
+		eventBuffer.add(event);
+		System.out.println(event.getType());
 		
 	}
 	
