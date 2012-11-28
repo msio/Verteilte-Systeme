@@ -125,16 +125,8 @@ public class ServerConnection
 					return false;
 				}
 				
-				try {
-					analyticsServer.processEvent(new UserEvent("ID","USER_LOGIN" , System.currentTimeMillis(), username.toString()));
-				} catch (RemoteException e) {
-					System.out.println("LOGIN processEvent: Remote Exception ");
-					e.printStackTrace();
 				
-				} catch (IllegalArgumentException e) {
-					System.out.println("LOGIN processEvent: Illegal Argument Exception");
-					e.printStackTrace();
-				}
+				
 				return true;
 			}
 		}
@@ -160,6 +152,8 @@ public class ServerConnection
 					{
 						return false;
 					}
+					
+					
 					return true;
 				}
 			}

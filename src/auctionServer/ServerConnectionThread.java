@@ -4,6 +4,7 @@ import java.net.Socket;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
+import eventHierarchy.AuctionEvent;
 import eventHierarchy.EventTypeConstants;
 import eventHierarchy.UserEvent;
 
@@ -29,7 +30,7 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 		//this.analyticsServer = serverConnection.getAnalyticsServer();
 	}
 	
-	/*private String getID(){
+	private synchronized String getID(){
 		
 		return "AS"+ID++;
 	}
@@ -39,7 +40,7 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 		
 		return System.currentTimeMillis();
 	} 
-	*/
+	
 	public void run()
 	{
 		try
@@ -72,7 +73,7 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 						else
 						{
 							currentUser = sub[1];
-							//analyticsServer.processEvent(new UserEvent(getID() ,USER_LOGIN,getCurrentTimeStamp() , currentUser.toString()));
+						 analyticsServer.processEvent(new UserEvent(getID() ,USER_LOGIN, getCurrentTimeStamp() , currentUser.toString()));
 							con.sendMessage("Successfully logged in as " + sub[1] + "!");
 						}
 						}
@@ -101,7 +102,7 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 						else
 						{
 							// Logged out correctly!
-							//analyticsServer.processEvent(new UserEvent(getID(), USER_LOGOUT, getCurrentTimeStamp(), currentUser.toString()));
+							analyticsServer.processEvent(new UserEvent(getID(), USER_LOGOUT, getCurrentTimeStamp(), currentUser.toString()));
 							con.sendMessage("Successfully logged out as " + currentUser + "!");
 						}
 						
@@ -154,6 +155,11 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 							String endDate = auction.getEndDateString();
 							
 							serverConnection.addAuction(auction);
+								
+								// send notification to the analytics server
+								analyticsServer.processEvent(new AuctionEvent(getID(), AUCTION_STARTED, getCurrentTimeStamp(), (long)auction.getId()));
+							
+							
 							
 							con.sendMessage("An auction '" + description + "' with id " + id + " has been created and will end on " + endDate + ".");
 						}
@@ -234,22 +240,35 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 		{
 			
 			try {
-				//analyticsServer.processEvent(new UserEvent(getID(), USER_DISCONNECTED, getCurrentTimeStamp(), currentUser.toString()));
+				
+				if(currentUser != null){
+				 analyticsServer.processEvent(new UserEvent(getID(), USER_DISCONNECTED, getCurrentTimeStamp(), currentUser.toString()));
+				}
+			
 			} catch (Exception e1) {
-				System.out.println("ERROR processEvent" + e1);
+				System.out.println("DISCONNECTED processEvent" + e1);
 			} 
-			System.out.println("Server Connection Thread interrupt" + e);
+			
+			System.out.println("Server Connection Thread interrupt " + e);
 		}
 		finally
 		{
-			/*try {
-				analyticsServer.processEvent(new UserEvent(getID(),"USER_LOGOUT", getCurrentTimeStamp(), currentUser.toString()));
-			} catch (Exception e) {
-				e.printStackTrace();
-				System.out.println("ERROR processEvent" + e);
-			}*/
+			
 			// log the user out, if the Server gets stopped
-			serverConnection.logUserOut(currentUser);	
+			if(serverConnection.logUserOut(currentUser)){
+				
+				try {
+					
+					analyticsServer.processEvent(new UserEvent(getID(),"USER_LOGOUT", getCurrentTimeStamp(), currentUser.toString()));
+				
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.out.println("LOGOUT processEvent in finally" + e);
+				}
+		
+			}	
+			
+			
 			con.closeConnection();
 		}
 		
