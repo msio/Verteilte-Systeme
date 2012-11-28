@@ -4,6 +4,7 @@ import java.net.Socket;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
+
 import eventHierarchy.AuctionEvent;
 import eventHierarchy.BidEvent;
 import eventHierarchy.EventTypeConstants;
@@ -28,7 +29,7 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 		currentUser = null;
 		
 		this.serverConnection.addServerClientConnection(con);
-		//this.analyticsServer = serverConnection.getAnalyticsServer();
+		this.analyticsServer = serverConnection.getAnalyticsServer();
 	}
 	
 	
@@ -71,7 +72,10 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 						else
 						{
 							currentUser = sub[1];
-						 analyticsServer.processEvent(new UserEvent(IDgenerator.getID() ,USER_LOGIN, getCurrentTimeStamp() , currentUser.toString()));
+						 
+							
+							analyticsServer.processEvent(new UserEvent(IDgenerator.getID(),USER_LOGIN, getCurrentTimeStamp(), currentUser));
+						
 							con.sendMessage("Successfully logged in as " + sub[1] + "!");
 						}
 						}
@@ -262,12 +266,12 @@ public class ServerConnectionThread implements Runnable,EventTypeConstants
 				}
 			
 			} catch (Exception e1) {
-				System.out.println("DISCONNECTED processEvent" + e1);
+				System.out.println("DISCONNECTED processEvent " + e1);
 			} 
 			
 			System.out.println("Server Connection Thread interrupt " + e);
-		}
-		finally
+		
+		}finally
 		{
 			
 			// log the user out, if the Server gets stopped

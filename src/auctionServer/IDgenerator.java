@@ -7,6 +7,6 @@ public class IDgenerator {
 	public synchronized	static String getID(){
 		
 		
-		return "AS"+ ID++;
+		return "AUS"+ ID++;
 	}
 }

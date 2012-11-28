@@ -86,8 +86,10 @@ public class Server
 					
 					
 					Registry registry = LocateRegistry.getRegistry(registryHost,registryPort);
+					//analytics server
 					analyticsServer = (AnalyticsInterface) registry.lookup(analyticsBinginName);
-					
+					// billing server
+					//---------------- HIER INSERT ----------------------
 					
 					
 				}catch(Exception e){
