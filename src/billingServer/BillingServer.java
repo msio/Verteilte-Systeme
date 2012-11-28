@@ -2,9 +2,7 @@ package billingServer;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.rmi.AccessException;
 import java.rmi.AlreadyBoundException;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -206,7 +204,7 @@ public class BillingServer implements BillingServerInterface
 		if (in == null)
 		{
 			System.out.println("Can't read from user.properties file");
-			return null;
+			throw new RemoteException();
 		}
 		
 		String savedPassword;
@@ -221,7 +219,7 @@ public class BillingServer implements BillingServerInterface
 		catch (IOException e)
 		{
 			System.out.println("Could not read from the stream");
-			return null;
+			throw new RemoteException();
 		}
 		
 		try
@@ -231,13 +229,13 @@ public class BillingServer implements BillingServerInterface
 		catch (IOException e)
 		{
 			System.out.println("Could not close the stream");
-			return null;
+			throw new RemoteException();
 		}
 		
 		if (savedPassword == null)
 		{
 			System.out.println("username or password are wrong.");
-			return null;
+			throw new RemoteException();
 		}
 		
 		// create MD5 hashed password
@@ -272,6 +270,6 @@ public class BillingServer implements BillingServerInterface
 		}
 		
 		System.out.println("username or password are wrong.");
-		return null;
+		throw new RemoteException();
 	}
 }

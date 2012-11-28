@@ -7,6 +7,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 
 public class BillingServerSecure implements BillingServerSecureInterface //, Runnable
 {
@@ -14,9 +15,15 @@ public class BillingServerSecure implements BillingServerSecureInterface //, Run
 	private final static String rmiBindingName = "BillingServerSecureRef";
 	private BillingServerSecureInterface stub;
 	
+	private PriceSteps priceSteps;
+	private ArrayList<BillCreator> billCreators;
+	
 	BillingServerSecure()
 	{
 		super();
+		
+		priceSteps = new PriceSteps();
+		billCreators = new ArrayList<BillCreator>();
 	}
 	
 	/*public void run()
@@ -60,31 +67,71 @@ public class BillingServerSecure implements BillingServerSecureInterface //, Run
 	
 	public PriceSteps getPriceSteps() throws RemoteException
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return priceSteps;
 	}
 
-	public void createPriceStep(double startPrice, double endPrice, double fixedPice, double variablePricePercent) throws RemoteException
+	public void createPriceStep(double startPrice, double endPrice, double fixedPrice, double variablePricePercent) throws RemoteException
 	{
-		// TODO Auto-generated method stub
+		if(startPrice < 0 || endPrice < 0 || fixedPrice < 0 || variablePricePercent < 0)
+			throw new RemoteException();
+		
+		try
+		{
+			priceSteps.addStep(startPrice, endPrice, fixedPrice, variablePricePercent);
+		}
+		catch (IllegalArgumentException e)
+		{
+			//startPrice or endPrice collides with an excisting price Step
+			throw new RemoteException();
+		}
 		
 	}
 
 	public void deletPriceStep(double startPrice, double endPrice) throws RemoteException
 	{
-		// TODO Auto-generated method stub
+		try
+		{
+			priceSteps.deleteStep(startPrice, endPrice);
+		}
+		catch (IllegalArgumentException e)
+		{
+			throw new RemoteException();
+		}
 		
 	}
 
 	public void billAuction(String user, long auctionID, double price) throws RemoteException
 	{
-		// TODO Auto-generated method stub
+		for(BillCreator billElements : billCreators)
+		{
+			if(billElements.getUsername().equals(user))
+			{
+				billElements.addAuction(auctionID, price);
+				return;
+			}
+		}
+		
+		BillCreator newCreator = new BillCreator(user);
+		newCreator.addAuction(auctionID, price);
+		
+		billCreators.add(newCreator);
 		
 	}
 
 	public Bill getBill(String user) throws RemoteException
 	{
-		// TODO Auto-generated method stub
-		return null;
+		Bill bill;
+		
+		for(BillCreator billElements : billCreators)
+		{
+			if(billElements.getUsername().equals(user))
+			{
+				bill = billElements.createBill(priceSteps);
+				return bill;
+			}
+		}
+		
+		System.out.println("No User with the name: " + user + ".");
+		throw new RemoteException();
 	}
 }
