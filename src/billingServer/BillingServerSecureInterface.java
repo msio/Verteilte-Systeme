@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-public interface BillingServerSecureInterface extends Remote, Serializable 
+public interface BillingServerSecureInterface extends Remote 
 {
 	public PriceSteps getPriceSteps() throws RemoteException;
 	
