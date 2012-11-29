@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
 
 import managementClient.ManagementClientInterface;
 
+import eventHierarchy.AuctionEvent;
+import eventHierarchy.BidEvent;
 import eventHierarchy.Event;
 import eventHierarchy.EventTypeConstants;
 import eventHierarchy.StatisticsEvent;
@@ -22,15 +24,14 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 	private static int UserID;
 	private HashMap<String,SubscribedClient> subscribedClients;
 	private ArrayList<UserEvent> userLogin;
-	private ArrayList<Event> bidList;
+	private ArrayList<AuctionEvent> auctionStart;
 	private ArrayList<Event> auctionList;
-	private double userSessionMax;
-	private double userSessionMin;
-	private double userSessionAvg;
-	private int userSessionAvgNum;
-	private double bidPriceMax;
-	private double auctionTimeAvg;
-	private double AuctionSucessRatio;
+	private double userSessionMax=0;
+	private double userSessionMin=0;
+	private double userSessionAvg=0;
+	private double bidPriceMax=0;
+	private double auctionTimeAvg=0;
+	private double AuctionSucessRatio=0;
 	
 	private static final long serialVersionUID = 1L;
 
@@ -40,8 +41,9 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 		
 		subscribedClients = new HashMap<String, SubscribedClient>();
 		userLogin = new ArrayList<UserEvent>();
-		bidList = new ArrayList<Event>();
-		auctionList = new ArrayList<Event>(); 
+		auctionStart = new ArrayList<AuctionEvent>();
+		auctionList = new ArrayList<Event>();
+		
 	}
 
 	private static String getIDEvent(){
@@ -60,10 +62,11 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 		
 		Pattern pattern = Pattern.compile(regex);		
 		
-		for(int i= 0;i<NUMBER_OF_ALL_EVENTS;i++){
+		for(int i= 0;i<15;i++){
 			Matcher match = pattern.matcher(ALL_EVENTS[i]);
 			
-			if(match.matches()){
+			if(match.find()){
+				
 				all.add(ALL_EVENTS[i]);
 			}
 		}
@@ -76,12 +79,16 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 	public String subscribe(ManagementClientInterface client) throws RemoteException {
 			SubscribedClient subClient = new SubscribedClient(client);
 			
+			
 			ArrayList<String> allEvents=computeRegex(client.getRegex());
-			String ID = getIDEvent();
+			String ID = getUserID();
+			
+		   
 			
 			if(allEvents != null){
 				subClient.addEvents(allEvents);
 				subscribedClients.put(ID,subClient);
+				
 				
 				return ID;
 			}
@@ -104,10 +111,13 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 	@Override
 	public void processEvent(Event event) throws RemoteException {
 		
+		// AUCTION_SUCCESS_RATIO implement
+		
 		if(event.getType() == USER_LOGIN){
 			userLogin.add((UserEvent) event);
 		
 		}else if((event.getType() == USER_LOGOUT) || (event.getType() == USER_DISCONNECTED)){
+				
 			
 			UserEvent tempUserEvent= (UserEvent)event;	
 			double tempSession=0;
@@ -117,11 +127,13 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 				if(e.getUserName() == tempUserEvent.getUserName()) {
 					
 					tempSession = tempUserEvent.getTimestamp() - e.getTimestamp(); 
-					userSessionAvgNum++;
+					userLogin.remove(e);
 					break;  
 				}
 			}	
 				
+				
+			
 				// user min session duration 
 				if(userSessionMin > tempSession){
 					
@@ -135,16 +147,44 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 				}
 				
 				// user session average duration
-				userSessionAvg = (userSessionAvg + tempSession) / userSessionAvgNum;
-				
+				if(userSessionAvg == 0){
+					userSessionAvg = (userSessionAvg + tempSession); 
+				}else{
+					
+					userSessionAvg = (userSessionAvg + tempSession) / 2;
+				}	
 			
+			
+				
 		}else if(event.getType() == AUCTION_STARTED){
 			
-			auctionList.add(event);
-		
-		}else if(event.getType() == AUCTION_ENDED){
-			auctionList.add(event);
+			auctionStart.add((AuctionEvent)event);
 			
+		}else if(event.getType() == AUCTION_ENDED){
+			
+			AuctionEvent tempAuctionEvent = (AuctionEvent)event;
+			
+			double tempTime=0;
+			
+			for(AuctionEvent a : auctionStart){
+				
+				if(a.getAuctionId() == tempAuctionEvent.getAuctionId()){
+					
+					tempTime=tempAuctionEvent.getTimestamp() - a.getTimestamp();
+					auctionStart.remove(a);
+					break;
+				}
+			}
+			
+			if(auctionTimeAvg == 0){
+				
+				auctionTimeAvg =auctionTimeAvg + tempTime; 
+			}else{
+				
+				auctionTimeAvg = (auctionTimeAvg +tempTime) / 2;
+			}
+			
+		
 		}else if(event.getType() == BID_OVERBID){
 			bidList.add(event); 
 			
@@ -160,7 +200,6 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 		sendToManagementClients(event);
 		
 	}
-	// ---- THERE IS A BUG .. FIND IT 
 	
 	private void sendToManagementClients(Event event){
 		
@@ -174,13 +213,89 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 			 
 			for(String eventString : client.getEvents()){
 				
-				try {
-					tempManagementClient.processEvent(event);
-				} catch (RemoteException e1) {
-					System.out.println("event");
-					e1.printStackTrace();
+				if(eventString.equals(USER_LOGIN)){
+					try {
+						tempManagementClient.processEvent((UserEvent)event);
+					} catch (RemoteException e) {
+						System.out.println("Error UserLogin in AnalyticsServer");
+						e.printStackTrace();
+					}
 				}
 				
+				if(eventString.equals(USER_LOGOUT)){
+					try {
+						tempManagementClient.processEvent((UserEvent)event);
+					} catch (RemoteException e) {
+						System.out.println("Error User in AnalyticsServer");
+						e.printStackTrace();
+					}
+					
+				}
+				
+				if(eventString.equals(USER_DISCONNECTED)){
+					try {
+						tempManagementClient.processEvent((UserEvent)event);
+					} catch (RemoteException e) {
+						System.out.println("Error User in AnalyticsServer");
+						e.printStackTrace();
+					}
+					
+				}
+				
+				if(eventString.equals(AUCTION_STARTED)){
+					try {
+						tempManagementClient.processEvent((AuctionEvent)event);
+					} catch (RemoteException e) {
+						System.out.println("Error AuctionStarted in AnalyticsServer");
+						e.printStackTrace();
+					}
+					
+				}
+			
+				if(eventString.equals(AUCTION_ENDED)){
+					try {
+						tempManagementClient.processEvent((AuctionEvent)event);
+					} catch (RemoteException e) {
+						System.out.println("Error Auction in AnalyticsServer");
+						e.printStackTrace();
+					}
+					
+				}
+
+				if(eventString.equals(BID_OVERBID)){
+					try {
+						tempManagementClient.processEvent((BidEvent)event);
+					} catch (RemoteException e) {
+						System.out.println("Error Bid in AnalyticsServer");
+						e.printStackTrace();
+					}
+					
+				}
+
+				if(eventString.equals(BID_PLACED)){
+					try {
+						tempManagementClient.processEvent((BidEvent)event);
+					} catch (RemoteException e) {
+						System.out.println("Error Bid in AnalyticsServer");
+						e.printStackTrace();
+					}
+					
+				}
+				
+				if(eventString.equals(BID_WON)){
+					try {
+						tempManagementClient.processEvent((BidEvent)event);
+					} catch (RemoteException e) {
+						System.out.println("Error Bid in AnalyticsServer");
+						e.printStackTrace();
+					}
+					
+				}
+				
+				
+				
+				
+				// events that are computed
 				if(eventString.equals(USER_SESSIONTIME_MAX)){
 						try {
 							tempManagementClient.processEvent(new StatisticsEvent(getIDEvent(), USER_SESSIONTIME_MAX, System.currentTimeMillis(), userSessionMax));
@@ -190,7 +305,7 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 						} 
 				}
 				
-				
+				if(eventString.equals(anObject))
 				
 			} 
 		}

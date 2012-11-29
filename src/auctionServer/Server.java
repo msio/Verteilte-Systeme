@@ -100,7 +100,7 @@ public class Server
 					
 				}catch(Exception e){
 					
-					System.out.println("Error connection to AnalyticsServer" + e);
+					System.out.println("Error connection to AnalyticsServer or BillingServer" + e);
 				}
 				
 
