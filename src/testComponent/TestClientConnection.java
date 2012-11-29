@@ -1,4 +1,5 @@
 package testComponent;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -10,43 +11,44 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Random;
 
-
 public class TestClientConnection
 {
 	private Socket serverSocket;
-	//private DatagramSocket udpSocket;
+	// private DatagramSocket udpSocket;
 	private PrintWriter out;
 	private BufferedReader in;
 	private String currentUserName;
 	
 	private Random random;
 	private ArrayList<Integer> auctionList;
+	private ArrayList<String> tcpMessage;
 	
 	public TestClientConnection(String serverName, int tcpPort)
 	{
 		try
 		{
 			serverSocket = new Socket(serverName, tcpPort);
-			//udpSocket = new DatagramSocket(udpPort);
+			// udpSocket = new DatagramSocket(udpPort);
 			
-			//true = with auto Flush
+			// true = with auto Flush
 			out = new PrintWriter(serverSocket.getOutputStream(), true);
 			
 			in = new BufferedReader(new InputStreamReader(serverSocket.getInputStream()));
 		}
 		catch (UnknownHostException e)
 		{
-			System.err.println("Don't know about host: "+ serverName);
-            System.exit(1);
+			System.err.println("Don't know about host: " + serverName);
+			System.exit(1);
 		}
 		catch (IOException e)
 		{
-			System.err.println("Couldn't get I/O for the connection to: "+ serverName);
+			System.err.println("Couldn't get I/O for the connection to: " + serverName);
 			System.exit(1);
 		}
 		
 		random = new Random(System.nanoTime());
 		auctionList = new ArrayList<Integer>();
+		tcpMessage = new ArrayList<String>();
 	}
 	
 	public synchronized void sendMessage(String message)
@@ -54,24 +56,50 @@ public class TestClientConnection
 		out.println(message);
 	}
 	
-	public synchronized String getMessage() throws IOException
+	public String getMessage() throws IOException
 	{
 		return in.readLine();
 	}
 	
-	public synchronized String sendAndReceive(String message) throws IOException
+	public synchronized String sendAndReceive(String message) throws IOException, InterruptedException
 	{
 		out.println(message);
 		return in.readLine();
 	}
 	
-	public synchronized void setAuctionList(ArrayList<Integer> auctionList)
+	public synchronized void setAuctionList()
 	{
-		this.auctionList = auctionList;
+		auctionList.clear();
+		//System.out.println(tcpMessage);
+		
+		for (String message : tcpMessage)
+		{
+			
+			String[] splitLine = message.split("\t");
+			
+			int value = 0;
+			
+			try
+			{
+				value = Integer.parseInt(splitLine[0].substring(0, splitLine[0].length() - 1));
+			}
+			catch (Exception e)
+			{
+				// continue with the next line
+				continue;
+			}
+			
+			auctionList.add(value);
+			
+		}
+		
+		tcpMessage.clear();
+		
 	}
 	
 	public synchronized ArrayList<Integer> getAuctionList()
 	{
+		// System.out.println(auctionList);
 		return auctionList;
 	}
 	
@@ -80,18 +108,26 @@ public class TestClientConnection
 		return random;
 	}
 	
-	/*public String getUdpMessage() throws IOException
+	public synchronized void addTcpMessage(String message)
 	{
-		byte[] buf = new byte[256];
-		
-		DatagramPacket packet = new DatagramPacket(buf, buf.length);
-		
-		udpSocket.receive(packet);
-		
-		String message = new String(packet.getData());
-		
-		return message;
-	}*/
+		if(message != null)
+			tcpMessage.add(message);
+	}
+	
+	/*
+	 * public String getUdpMessage() throws IOException
+	 * {
+	 * byte[] buf = new byte[256];
+	 * 
+	 * DatagramPacket packet = new DatagramPacket(buf, buf.length);
+	 * 
+	 * udpSocket.receive(packet);
+	 * 
+	 * String message = new String(packet.getData());
+	 * 
+	 * return message;
+	 * }
+	 */
 	
 	public String getCurrentUserName()
 	{
@@ -110,7 +146,7 @@ public class TestClientConnection
 			out.close();
 			in.close();
 			serverSocket.close();
-			//udpSocket.close();
+			// udpSocket.close();
 		}
 		catch (IOException e)
 		{
@@ -119,5 +155,17 @@ public class TestClientConnection
 		}
 	}
 	
+	public synchronized int getRandomAuction()
+	{
+		// get auction list from con
+		
+		
+		if (auctionList.isEmpty())
+			return -1;
+		
+		// select one random auction from the auctionList
+		int rand = random.nextInt(auctionList.size());
+		return auctionList.get(rand);
+	}
 	
 }

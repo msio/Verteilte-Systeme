@@ -20,29 +20,17 @@ public class BidOnAuctionTask extends TimerTask
 	{
 		long currentTime = System.nanoTime();
 		
-		//get auction list from con
-		ArrayList<Integer> auctionList = con.getAuctionList();
+		int auctionId = con.getRandomAuction();
 		
-		if(auctionList.isEmpty())
+		if(auctionId < 0)
 			return;
 		
-		//select one random auction from the auctionList
-		Random random = con.getRandom();
-		int rand = random.nextInt(auctionList.size());
-		int auctionId = auctionList.get(rand);
-		
 		//calculate the amount: startTime - currentTime
-		double amount = (startTime - currentTime)/1000.d;
+		double amount = (currentTime - startTime)/1000000000.d;
 		
-		//send Message
-		try
-		{
-			con.sendAndReceive("!bid " + auctionId + " " + amount);
-		}
-		catch (IOException e)
-		{
-			System.out.println("Could not send bid message.");
-		}
+		con.sendMessage("!bid " + auctionId + " " + amount);
+		
+		//System.out.println("!bid " + auctionId + " " + amount);
 		
 	}
 	
