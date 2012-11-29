@@ -115,7 +115,7 @@ public class ManagementClient {
 		//closing client 
 		sc.close();
 		
-		
+		System.exit(0);
 	}
 
 }

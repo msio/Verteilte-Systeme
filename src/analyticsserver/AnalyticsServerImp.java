@@ -26,6 +26,7 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 	private ArrayList<UserEvent> userLogin;
 	private ArrayList<AuctionEvent> auctionStart;
 	private ArrayList<BidEvent> bidList;
+	private HashMap<Long,Boolean> auctionBiddedMap;
 	private double userSessionMax=0;
 	private double userSessionMin=0;
 	private double userSessionAvg=0;
@@ -35,7 +36,6 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 	private int bidsNum=0;
 	private long startTime=0;
 	private int auctionEnded=0;
-	private int auctionBidded=0;
 	
 	private static final long serialVersionUID = 1L;
 
@@ -48,7 +48,7 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 		userLogin = new ArrayList<UserEvent>();
 		auctionStart = new ArrayList<AuctionEvent>();
 		bidList = new ArrayList<BidEvent>();
-		
+		auctionBiddedMap = new HashMap<Long,Boolean>();
 	}
 
 	private static String getIDEvent(){
@@ -93,7 +93,7 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 			if(allEvents != null){
 				subClient.addEvents(allEvents);
 				subscribedClients.put(ID,subClient);
-				
+				System.out.println("ALL EVENTS: "+subClient.getEvents());
 				
 				return ID;
 			}
@@ -163,7 +163,9 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 				
 		}else if(event.getType() == AUCTION_STARTED){
 			
-			auctionStart.add((AuctionEvent)event);
+			AuctionEvent tempAuctionEvent = (AuctionEvent)event; 
+			auctionStart.add(tempAuctionEvent);
+			auctionBiddedMap.put(tempAuctionEvent.getAuctionId(),false);
 			
 		}else if(event.getType() == AUCTION_ENDED){
 			
@@ -180,7 +182,8 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 					break;
 				}
 				
-				
+
+					
 				auctionEnded++;
 			}
 			
@@ -195,11 +198,15 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 		
 		}else if(event.getType() == BID_PLACED){
 			
+			BidEvent tempBidEvent = (BidEvent) event;
+			 auctionBiddedMap.put(tempBidEvent.getAuctionId(),true);
 			
 			BidEvent tempBid = (BidEvent) event;
 			if(bidPriceMax < tempBid.getPrice()){
 					bidPriceMax=tempBid.getPrice();
 			}
+			
+			
 			
 			bidsNum++;
 			
@@ -225,7 +232,9 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 			 
 			for(String eventString : client.getEvents()){
 				
-				if(eventString.equals(USER_LOGIN)){
+				
+				
+				if(eventString.equals(USER_LOGIN) && event.getType().equals(USER_LOGIN)){
 					try {
 						tempManagementClient.processEvent((UserEvent)event);
 					} catch (RemoteException e) {
@@ -234,7 +243,7 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 					}
 				}
 				
-				if(eventString.equals(USER_LOGOUT)){
+				if(eventString.equals(USER_LOGOUT) && event.getType().equals(USER_LOGOUT) ){
 					try {
 						tempManagementClient.processEvent((UserEvent)event);
 					} catch (RemoteException e) {
@@ -244,7 +253,7 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 					
 				}
 				
-				if(eventString.equals(USER_DISCONNECTED)){
+				if(eventString.equals(USER_DISCONNECTED) && event.getType().equals(USER_DISCONNECTED)){
 					try {
 						tempManagementClient.processEvent((UserEvent)event);
 					} catch (RemoteException e) {
@@ -254,7 +263,7 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 					
 				}
 				
-				if(eventString.equals(AUCTION_STARTED)){
+				if(eventString.equals(AUCTION_STARTED) && event.getType().equals(AUCTION_STARTED)){
 					try {
 						tempManagementClient.processEvent((AuctionEvent)event);
 					} catch (RemoteException e) {
@@ -264,7 +273,7 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 					
 				}
 			
-				if(eventString.equals(AUCTION_ENDED)){
+				if(eventString.equals(AUCTION_ENDED) && event.getType().equals(AUCTION_ENDED)){
 					try {
 						tempManagementClient.processEvent((AuctionEvent)event);
 					} catch (RemoteException e) {
@@ -274,7 +283,7 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 					
 				}
 
-				if(eventString.equals(BID_OVERBID)){
+				if(eventString.equals(BID_OVERBID) && event.getType().equals(BID_OVERBID)){
 					try {
 						tempManagementClient.processEvent((BidEvent)event);
 					} catch (RemoteException e) {
@@ -284,7 +293,7 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 					
 				}
 
-				if(eventString.equals(BID_PLACED)){
+				if(eventString.equals(BID_PLACED) && event.getType().equals(BID_PLACED) ){
 					try {
 						tempManagementClient.processEvent((BidEvent)event);
 					} catch (RemoteException e) {
@@ -294,7 +303,7 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 					
 				}
 				
-				if(eventString.equals(BID_WON)){
+				if(eventString.equals(BID_WON) && event.getType().equals(BID_WON)){
 					try {
 						tempManagementClient.processEvent((BidEvent)event);
 					} catch (RemoteException e) {
@@ -344,7 +353,7 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 					} 
 				}
 				
-				if(eventString.equals(BID_COUNT_PER_MINUTE)){
+				if(eventString.equals(BID_COUNT_PER_MINUTE) ){
 					try {
 						long currentTime = System.nanoTime();
 						
@@ -366,7 +375,26 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 					} 
 				}
 
-
+				if(eventString.equals(AUCTION_SUCCESS_RATIO)){
+					
+					int succesRatioNum =0;
+					
+					ArrayList<Boolean> ratioList = new ArrayList<Boolean>(auctionBiddedMap.values());
+					
+					for(Boolean b: ratioList){
+					
+						if(b){
+							succesRatioNum++;
+						}
+					}
+					
+					try {
+						tempManagementClient.processEvent(new StatisticsEvent(getIDEvent(),AUCTION_SUCCESS_RATIO, System.currentTimeMillis(), ((double)succesRatioNum/auctionEnded)));
+					} catch (Exception e) {
+						System.out.println("auction time avg");
+						e.printStackTrace();
+					} 
+				}
 				
 				
 				
