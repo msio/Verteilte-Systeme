@@ -5,6 +5,10 @@ import java.util.ArrayList;
 
 public class Bill implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private ArrayList<BillElement> billElements;
 	
 	public Bill()

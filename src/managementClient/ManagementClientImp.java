@@ -41,10 +41,11 @@ public class ManagementClientImp {
 	private boolean print = false;
 	private ArrayList<String> messageList;
 	
-	public ManagementClientImp(AnalyticsInterface analyticsServer, BillingServerInterface billingServer )  {
+	public ManagementClientImp(AnalyticsInterface analyticsServer, BillingServerInterface billingServer, boolean autoMode )  {
 		this.analyticsServer=analyticsServer;
 		this.billingServer = billingServer;
 		messageList = new ArrayList<String>();
+		auto = autoMode;
 	}
 
 	// send management client object to analytics server

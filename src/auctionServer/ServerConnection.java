@@ -328,7 +328,7 @@ public class ServerConnection implements EventTypeConstants
 				*/
 				
 				//send Bill Auction to the Billing Server Secure
-				//sendBillAuction(auction.getOwner(), auction.getId(), auction.getCurrentPrice());
+				sendBillAuction(auction.getOwner(), auction.getId(), auction.getCurrentPrice());
 				
 				// delete auction, so nobody can bid anymore
 				iter.remove();
@@ -342,7 +342,7 @@ public class ServerConnection implements EventTypeConstants
 		clientConnectionList.add(con);
 	}
 	
-	/*public synchronized void sendBillAuction(String user, long auctionID, double price)
+	public synchronized void sendBillAuction(String user, long auctionID, double price)
 	{
 		try
 		{
@@ -353,7 +353,7 @@ public class ServerConnection implements EventTypeConstants
 			System.out.println("Cant send billAuction for auction: " + auctionID +".");
 		}
 	}
-	*/
+	
 	public void closeConnection()
 	{
 		System.out.println("Cancel the timer schcedule!");

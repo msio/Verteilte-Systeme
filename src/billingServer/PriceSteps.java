@@ -6,6 +6,10 @@ import java.util.Iterator;
 
 public class PriceSteps implements Serializable 
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private ArrayList<PriceStep> priceSteps;
 	
 	PriceSteps()

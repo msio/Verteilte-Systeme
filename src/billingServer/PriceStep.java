@@ -1,7 +1,14 @@
 package billingServer;
 
-public class PriceStep
+import java.io.Serializable;
+
+public class PriceStep implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	private double startPrice;
 	private double endPrice;
 	private double fixedPrice;
@@ -37,6 +44,6 @@ public class PriceStep
 	
 	public String toString()
 	{
-		return String.format("%9s\t %9s\t %9s\t %12s\t", startPrice, endPrice, fixedPrice, variablePricePercent);
+		return String.format("%9s %9s %9s %12s", startPrice, endPrice, fixedPrice, variablePricePercent);
 	}
 }
