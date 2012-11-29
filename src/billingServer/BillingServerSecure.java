@@ -1,5 +1,6 @@
 package billingServer;
 
+import java.io.Serializable;
 import java.rmi.AccessException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
@@ -9,8 +10,12 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 
-public class BillingServerSecure implements BillingServerSecureInterface //, Runnable
+public class BillingServerSecure implements BillingServerSecureInterface, Serializable //, Runnable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private Registry registry;
 	private final static String rmiBindingName = "BillingServerSecureRef";
 	private BillingServerSecureInterface stub;

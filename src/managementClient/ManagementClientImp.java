@@ -2,6 +2,7 @@ package managementClient;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -25,6 +26,9 @@ public class ManagementClientImp {
 	private static final String BILL ="!bill";
 	private static final String SUBSCRIBE = "!subscribe";
 	private static final String UNSUBSCRIBE = "!unsubscribe";
+	private static final String HIDE = "!hide";
+	private static final String AUTO = "!auto";
+	private static final String PRINT = "!print";
  
 	private String regex;
 	private AnalyticsInterface analyticsServer;
@@ -33,10 +37,14 @@ public class ManagementClientImp {
 	private String ID;
 	
 	private boolean loggedIn = false;
+	private boolean auto = false;
+	private boolean print = false;
+	private ArrayList<String> messageList;
 	
 	public ManagementClientImp(AnalyticsInterface analyticsServer, BillingServerInterface billingServer )  {
 		this.analyticsServer=analyticsServer;
 		this.billingServer = billingServer;
+		messageList = new ArrayList<String>();
 	}
 
 	// send management client object to analytics server
@@ -45,7 +53,7 @@ public class ManagementClientImp {
 		
 		ManagementClientCallback clientCallback=null;
 		try {
-			clientCallback = new ManagementClientCallback(getRegex());
+			clientCallback = new ManagementClientCallback(getRegex(), this);
 		} catch (RemoteException e) {
 			System.out.println("ERROR Create Managmenent.. ");
 			e.printStackTrace();
@@ -280,6 +288,32 @@ public class ManagementClientImp {
 				return "Subscription "+ID+ " Not terminated" ;
 			}
 		
+		}else if(command.contains(HIDE)){
+			
+			auto = false;
+			
+			return "Hide mode activated.";
+			
+		}else if(command.contains(AUTO)){
+			
+			auto = true;
+			
+			return "Auto mode activated.";
+			
+		}else if(command.contains(PRINT)){
+			
+			//print current messages
+			String retMessage = "";
+			
+			for(String message : messageList)
+			{
+				retMessage += message + "\n";
+			}
+			
+			//clear messageList
+			messageList.clear();
+			
+			return retMessage;
 		}
 		
 		return "ERROR:  Invalid Command";
@@ -296,6 +330,27 @@ public class ManagementClientImp {
 			checkRegex=false;
 		}
 		return checkRegex;
+	}
+	
+	public boolean getAuto()
+	{
+		return auto;
+	}
+	
+	public boolean getPrint()
+	{
+		return print;
+	}
+	
+	public void setPrintFalse()
+	{
+		print = false;
+	}
+
+	public void addMessage(String message)
+	{
+		messageList.add(message);
+		
 	}
 	
 }
