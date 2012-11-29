@@ -18,14 +18,7 @@ public class CreateAuctionTask extends TimerTask
 	
 	public void run()
 	{
-		try
-		{
-			con.sendAndReceive("!create " + auctionDuration * 1000 + " another auction");
-		}
-		catch (IOException e)
-		{
-			System.out.println("Could not send create message.");
-		}
+		con.sendMessage("!create " + auctionDuration * 1000 + " another auction");
 		
 	}
 	
