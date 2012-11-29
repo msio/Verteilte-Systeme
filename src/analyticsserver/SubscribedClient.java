@@ -21,5 +21,13 @@ public class SubscribedClient {
 	public ArrayList<String> getEvents(){
 		
 		return events;
-	} 
+	}
+	
+	public ManagementClientInterface getManagementClient(){
+		
+		return client;
+	}
+	
 }
+
+
