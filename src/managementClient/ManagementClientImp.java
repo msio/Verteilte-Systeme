@@ -261,7 +261,7 @@ public class ManagementClientImp {
 			subscribe();
 			
 			
-			if(ID != null){
+			if(ID == null){
 				
 				return "Subscription Not Created";
 			}else{

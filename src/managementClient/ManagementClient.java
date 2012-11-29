@@ -9,6 +9,7 @@ import java.util.Scanner;
 
 import billingServer.BillingServerInterface;
 
+import analyticsserver.AnalyticsInterface;
 import analyticsserver.AnalyticsServerImp;
 
 public class ManagementClient {
@@ -69,17 +70,17 @@ public class ManagementClient {
 		//make connection 
 		
 		
-		AnalyticsServerImp analyticsServer=null;
+		AnalyticsInterface analyticsServer=null;
 		BillingServerInterface billingServer = null;
 		
 		try{
 			
 					Registry registry = LocateRegistry.getRegistry(host, port);
 					// get Analytics Server
-					analyticsServer= (AnalyticsServerImp) registry.lookup(analyticsBindingName);
+					analyticsServer= (AnalyticsInterface) registry.lookup(analyticsBindingName);
 					
 					//get Billing Server
-					billingServer = (BillingServerInterface) registry.lookup(billingBindingname);
+					//billingServer = (BillingServerInterface) registry.lookup(billingBindingname);
 			
 		}catch(Exception e){
 			System.out.println("Error in Management client");
