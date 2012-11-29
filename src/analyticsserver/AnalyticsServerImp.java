@@ -25,13 +25,17 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 	private HashMap<String,SubscribedClient> subscribedClients;
 	private ArrayList<UserEvent> userLogin;
 	private ArrayList<AuctionEvent> auctionStart;
-	private ArrayList<Event> auctionList;
+	private ArrayList<BidEvent> bidList;
 	private double userSessionMax=0;
 	private double userSessionMin=0;
 	private double userSessionAvg=0;
 	private double bidPriceMax=0;
 	private double auctionTimeAvg=0;
-	private double AuctionSucessRatio=0;
+	private double auctionSucessRatio=0;
+	private int bidsNum=0;
+	private long startTime=0;
+	private int auctionEnded=0;
+	private int auctionBidded=0;
 	
 	private static final long serialVersionUID = 1L;
 
@@ -39,10 +43,11 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 		
 		super();
 		
+		startTime=System.nanoTime(); 
 		subscribedClients = new HashMap<String, SubscribedClient>();
 		userLogin = new ArrayList<UserEvent>();
 		auctionStart = new ArrayList<AuctionEvent>();
-		auctionList = new ArrayList<Event>();
+		bidList = new ArrayList<BidEvent>();
 		
 	}
 
@@ -174,6 +179,9 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 					auctionStart.remove(a);
 					break;
 				}
+				
+				
+				auctionEnded++;
 			}
 			
 			if(auctionTimeAvg == 0){
@@ -185,17 +193,21 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 			}
 			
 		
-		}else if(event.getType() == BID_OVERBID){
-			bidList.add(event); 
-			
 		}else if(event.getType() == BID_PLACED){
-			bidList.add(event);
-		
-		}else if(event.getType() == BID_WON){
 			
-			bidList.add(event);
-		}
+			
+			BidEvent tempBid = (BidEvent) event;
+			if(bidPriceMax < tempBid.getPrice()){
+					bidPriceMax=tempBid.getPrice();
+			}
+			
+			bidsNum++;
+			
 		
+		}/*else if(event.getType() == BID_WON){
+			
+			
+		}*/		
 		  
 		sendToManagementClients(event);
 		
@@ -305,7 +317,61 @@ public class AnalyticsServerImp extends UnicastRemoteObject implements Analytics
 						} 
 				}
 				
-				if(eventString.equals(anObject))
+				if(eventString.equals(USER_SESSIONTIME_MIN)){
+					try {
+						tempManagementClient.processEvent(new StatisticsEvent(getIDEvent(), USER_SESSIONTIME_MIN, System.currentTimeMillis(), userSessionMin));
+					} catch (Exception e) {
+						System.out.println("user sessiontime min");
+						e.printStackTrace();
+					} 
+				}
+				
+				if(eventString.equals(USER_SESSIONTIME_AVG)){
+					try {
+						tempManagementClient.processEvent(new StatisticsEvent(getIDEvent(), USER_SESSIONTIME_AVG, System.currentTimeMillis(), userSessionAvg));
+					} catch (Exception e) {
+						System.out.println("user sessiontime avg");
+						e.printStackTrace();
+					} 
+				}
+				
+				if(eventString.equals(BID_PRICE_MAX)){
+					try {
+						tempManagementClient.processEvent(new StatisticsEvent(getIDEvent(), BID_PRICE_MAX, System.currentTimeMillis(), bidPriceMax));
+					} catch (Exception e) {
+						System.out.println("bid price max");
+						e.printStackTrace();
+					} 
+				}
+				
+				if(eventString.equals(BID_COUNT_PER_MINUTE)){
+					try {
+						long currentTime = System.nanoTime();
+						
+						double bidPerMinute = (double) ((long)bidsNum / ((currentTime - startTime) *1000 *100 *1000 *60)); 
+						
+						tempManagementClient.processEvent(new StatisticsEvent(getIDEvent(), BID_COUNT_PER_MINUTE, System.currentTimeMillis(),bidPerMinute));
+					} catch (Exception e) {
+						System.out.println("bid count per minute");
+						e.printStackTrace();
+					} 
+				}
+				
+				if(eventString.equals(AUCTION_TIME_AVG)){
+					try {
+						tempManagementClient.processEvent(new StatisticsEvent(getIDEvent(),AUCTION_TIME_AVG, System.currentTimeMillis(), auctionTimeAvg));
+					} catch (Exception e) {
+						System.out.println("auction time avg");
+						e.printStackTrace();
+					} 
+				}
+
+
+				
+				
+				
+
+
 				
 			} 
 		}
