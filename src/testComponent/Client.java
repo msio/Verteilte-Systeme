@@ -38,23 +38,13 @@ public class Client implements Runnable
 	{
 		TestClientConnection con = new TestClientConnection(hostname, tcpPort);
 		
+		Thread tcpListener = new Thread(new ClientTcpListener(con));
+		tcpListener.start();
+		
 		long startTime = System.nanoTime();
 		
-		String message = "";
-		
-		//login in auctionServer
+		// login in auctionServer
 		con.sendMessage("!login " + username + " 0");
-		try
-		{
-			message = con.getMessage();
-		}
-		catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		System.out.println(message);
 		
 		// Timer for the Tasks
 		Timer timer1 = new Timer();
@@ -63,41 +53,43 @@ public class Client implements Runnable
 		
 		// create Auctions
 		CreateAuctionTask createAuctionTask = new CreateAuctionTask(auctionDuration, con);
-		timer1.schedule(createAuctionTask, 1000, 1000 * 60/auctionsPerMinute);
+		timer1.schedule(createAuctionTask, 0, 1000 * 60 / auctionsPerMinute);
 		
 		// bid on auctions
 		BidOnAuctionTask bidOnAuctionTask = new BidOnAuctionTask(startTime, con);
-		timer2.schedule(bidOnAuctionTask, 1000, 1000 * 60/bidsPerMinute);
+		timer2.schedule(bidOnAuctionTask, 5000, 1000 * 60 / bidsPerMinute);
 		
 		// reload the !list
 		ReloadListTask reloadListTask = new ReloadListTask(con);
-		timer3.schedule(reloadListTask, 1000, 1000 * updateIntervalSec);
+		timer3.schedule(reloadListTask, 4000, 1000 * updateIntervalSec);
 		
-		while (!Thread.interrupted())
+		try
+		{
+			while (!Thread.interrupted())
+			{
+				Thread.sleep(10000);
+			}
+		}
+		catch (InterruptedException e)
 		{
 			
 		}
 		
-		//logout from auctinServer
+		// logout from auctinServer
 		con.sendMessage("!logout");
-		try
-		{
-			con.getMessage();
-		}
-		catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
 		
 		System.out.println("closing the connection to the server");
+		
+		tcpListener.interrupt();
 		
 		timer1.cancel();
 		timer2.cancel();
 		timer3.cancel();
 		
+		
+		
 		con.closeConnection();
+		
+		
 	}
-	
 }
