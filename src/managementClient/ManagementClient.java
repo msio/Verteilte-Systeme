@@ -22,6 +22,7 @@ public class ManagementClient {
 		
 		String analyticsBindingName=null;
 		String billingBindingname=null;
+		boolean autoMode = false;
 		
 		int port=0;
 		String host=null;
@@ -30,6 +31,11 @@ public class ManagementClient {
 			
 			analyticsBindingName= args[0];
 			billingBindingname= args[1];
+		}else if(args.length == 3){
+			
+			analyticsBindingName= args[0];
+			billingBindingname= args[1];
+			autoMode = Boolean.parseBoolean(args[2]);
 		}else{
 			
 			System.out.println("Usage:\n" + "java ManagementClient <analyticsBindingName> <billingBindingname>\n");
@@ -90,7 +96,7 @@ public class ManagementClient {
 		
 		 // ---- PASS BILLING SERVER OBJECT IN ManagementClientImp 
 		
-		ManagementClientImp clientImp = new ManagementClientImp(analyticsServer, billingServer);
+		ManagementClientImp clientImp = new ManagementClientImp(analyticsServer, billingServer, autoMode);
 		
 		
 		boolean end=false;

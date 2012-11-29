@@ -102,6 +102,7 @@ public class TestComponent
 		Scanner scan = new Scanner(System.in);
 		
 		// Block until Enter for next Line is pressed
+		/*
 		boolean end = false;
 		
 		while (!end)
@@ -115,12 +116,14 @@ public class TestComponent
 		}
 		
 		scan.close();
+		*/
 		
 		//better is
-		/*
-		String [] arguments = new String[2];
+		
+		String [] arguments = new String[3];
 		arguments[0] = analyticsBindingName;
 		arguments[1] = billingBindingName;
+		arguments[2] = "true";
 		try
 		{
 			managementClient.ManagementClient.main(arguments);
@@ -129,7 +132,7 @@ public class TestComponent
 		{
 			System.out.println("IOExceptoin when starting the ManagementClient.");
 		}
-		*/
+		
 		
 		//interrupt the clients
 		

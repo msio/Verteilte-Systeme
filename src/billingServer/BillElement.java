@@ -1,7 +1,13 @@
 package billingServer;
 
-public class BillElement
+import java.io.Serializable;
+
+public class BillElement implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private long auctionID;
 	private double strikePrice;
 	private double fixedFee;
@@ -13,12 +19,12 @@ public class BillElement
 		this.auctionID = auctionID;
 		this.strikePrice = strikePrice;
 		this.fixedFee = fixedFee;
-		this.variableFee = variableFee;
+		this.variableFee = variableFee/100.d * strikePrice;
 		totalFee = fixedFee + variableFee;
 	}
 	
 	public String toString()
 	{
-		return String.format("%10s\t %12s\t %9s\t %12s\t %9s\t", auctionID, strikePrice, fixedFee, variableFee, totalFee);
+		return String.format("%10s %12s %9s %12s %9s", auctionID, strikePrice, fixedFee, variableFee, totalFee);
 	}
 }
