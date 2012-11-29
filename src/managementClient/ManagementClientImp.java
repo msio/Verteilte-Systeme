@@ -5,6 +5,11 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import billingServer.Bill;
+import billingServer.BillingServerInterface;
+import billingServer.BillingServerSecureInterface;
+import billingServer.PriceSteps;
+
 import analyticsserver.AnalyticsInterface;
 
 import eventHierarchy.Event;
@@ -23,10 +28,15 @@ public class ManagementClientImp {
  
 	private String regex;
 	private AnalyticsInterface analyticsServer;
+	private BillingServerInterface billingServer;
+	private BillingServerSecureInterface billingServerSecure;
 	private String ID;
 	
-	public ManagementClientImp(AnalyticsInterface analyticsServer )  {
+	private boolean loggedIn = false;
+	
+	public ManagementClientImp(AnalyticsInterface analyticsServer, BillingServerInterface billingServer )  {
 		this.analyticsServer=analyticsServer;
+		this.billingServer = billingServer;
 	}
 
 	// send management client object to analytics server
@@ -79,22 +89,159 @@ public class ManagementClientImp {
 		
 		if(command.contains(LOGIN)){
 			
-			//input code
+			String[] subs = command.split(" ");
+			
+			if(subs.length != 3){
+				
+				return "ERROR: Invalid Number Of Command Arguments";
+			}
+			
+			try
+			{
+				billingServerSecure = billingServer.login(subs[1], subs[2]);
+				loggedIn = true;
+			}
+			catch (RemoteException e)
+			{
+				return "ERROR: Problem with logging in at BillingServer";
+			}
+			
+			return subs[1] + " successfully logged in";
 			
 		}else if(command.contains(LOGOUT)){
-			//input code
+			if(!loggedIn)
+			{
+				return "ERROR: You have to login first.";
+			}
+			
+			String[] subs = command.split(" ");
+			
+			if(subs.length != 1){
+				
+				return "ERROR: Invalid Number Of Command Arguments";
+			}
+			
+			billingServerSecure = null;
+			loggedIn = false;
+			
+			return "successfully logged out";
 			
 		}else if (command.contains(STEPS)){
-			//input code
+			
+			if(!loggedIn)
+			{
+				return "ERROR: You are not logged in.";
+			}
+			
+			String[] subs = command.split(" ");
+			
+			if(subs.length != 1){
+				
+				return "ERROR: Invalid Number Of Command Arguments";
+			}
+			
+			try
+			{
+				PriceSteps priceSteps = billingServerSecure.getPriceSteps();
+				return priceSteps.toString();
+			}
+			catch (RemoteException e)
+			{
+				return "ERROR: Problem with viewing the Price Steps";
+			}
+			
 		
 		}else if (command.contains(ADD_STEP)){
-			//input code
+			
+			if(!loggedIn)
+			{
+				return "ERROR: You are not logged in.";
+			}
+			
+			String[] subs = command.split(" ");
+			
+			if(subs.length != 5){
+				
+				return "ERROR: Invalid Number Of Command Arguments";
+			}
+			
+			try
+			{
+				double startPrice = Double.parseDouble(subs[1]);
+				double endPrice = Double.parseDouble(subs[2]);
+				double fixedPrice = Double.parseDouble(subs[3]);
+				double variablePricePercent = Double.parseDouble(subs[4]);
+				billingServerSecure.createPriceStep(startPrice, endPrice, fixedPrice, variablePricePercent);
+				double fixedEnd = endPrice;
+				if(endPrice == 0)
+				{
+					fixedEnd = Double.POSITIVE_INFINITY;
+				}
+				
+				return "Price Step [" + startPrice + " " + fixedEnd + "] successfully added.";
+			}
+			catch (RemoteException e)
+			{
+				return "ERROR: Price step not added";
+			}
 		
 		}else if (command.contains(REMOVE_STEP)){
-			//input code
+			
+			if(!loggedIn)
+			{
+				return "ERROR: You are not logged in.";
+			}
+			
+			String[] subs = command.split(" ");
+			
+			if(subs.length != 3){
+				
+				return "ERROR: Invalid Number Of Command Arguments";
+			}
+			
+			try
+			{
+				double startPrice = Double.parseDouble(subs[1]);
+				double endPrice = Double.parseDouble(subs[2]);
+				billingServerSecure.deletPriceStep(startPrice, endPrice);
+				double fixedEnd = endPrice;
+				if(endPrice == 0)
+				{
+					fixedEnd = Double.POSITIVE_INFINITY;
+				}
+				
+				return "Price Step [" + startPrice + " " + fixedEnd + "] successfully removed.";
+			}
+			catch (RemoteException e)
+			{
+				return "ERROR: Price step not removed";
+			}
 		
 		}else if (command.contains(BILL)){
-			//input code
+			
+			if(!loggedIn)
+			{
+				return "ERROR: You are not logged in.";
+			}
+			
+			String[] subs = command.split(" ");
+			
+			if(subs.length != 2){
+				
+				return "ERROR: Invalid Number Of Command Arguments";
+			}
+			
+			try
+			{
+				String username = subs[1];
+				Bill bill = billingServerSecure.getBill(username);
+				
+				return bill.toString();
+			}
+			catch (RemoteException e)
+			{
+				return "ERROR: No bill for this user ";
+			}
 		
 		}else if (command.contains(SUBSCRIBE)){
 			

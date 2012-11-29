@@ -7,6 +7,8 @@ import java.rmi.registry.Registry;
 import java.util.Properties;
 import java.util.Scanner;
 
+import billingServer.BillingServerInterface;
+
 import analyticsserver.AnalyticsServerImp;
 
 public class ManagementClient {
@@ -68,6 +70,7 @@ public class ManagementClient {
 		
 		
 		AnalyticsServerImp analyticsServer=null;
+		BillingServerInterface billingServer = null;
 		
 		try{
 			
@@ -76,7 +79,7 @@ public class ManagementClient {
 					analyticsServer= (AnalyticsServerImp) registry.lookup(analyticsBindingName);
 					
 					//get Billing Server
-					//---- INSERT YOUR CODE ------------
+					billingServer = (BillingServerInterface) registry.lookup(billingBindingname);
 			
 		}catch(Exception e){
 			System.out.println("Error in Management client");
@@ -86,7 +89,7 @@ public class ManagementClient {
 		
 		 // ---- PASS BILLING SERVER OBJECT IN ManagementClientImp 
 		
-		ManagementClientImp clientImp = new ManagementClientImp(analyticsServer);
+		ManagementClientImp clientImp = new ManagementClientImp(analyticsServer, billingServer);
 		
 		
 		boolean end=false;

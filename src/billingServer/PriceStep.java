@@ -35,4 +35,8 @@ public class PriceStep
 		return variablePricePercent;
 	}
 	
+	public String toString()
+	{
+		return String.format("%9s\t %9s\t %9s\t %12s\t", startPrice, endPrice, fixedPrice, variablePricePercent);
+	}
 }

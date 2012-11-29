@@ -95,8 +95,6 @@ public class Server
 					analyticsServer = (AnalyticsInterface) registry.lookup(analyticsBindingName);
 					// billing server
 					billingServer = (BillingServerInterface) registry.lookup(billingBindingName);
-
-					analyticsServer = (AnalyticsInterface) registry.lookup(analyticsBindingName);
 					
 					
 					

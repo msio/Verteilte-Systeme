@@ -86,4 +86,16 @@ public class PriceSteps implements Serializable
 		
 		return 0;
 	}
+	
+	public String toString()
+	{
+		String ret = "Min_Price Max_Price Fee_Fixed Fee_Variable\n";
+		
+		for(PriceStep step : priceSteps)
+		{
+			ret += step.toString() + "\n";
+		}
+		
+		return ret;
+	}
 }
