@@ -80,7 +80,7 @@ public class ManagementClient {
 					analyticsServer= (AnalyticsInterface) registry.lookup(analyticsBindingName);
 					
 					//get Billing Server
-					//billingServer = (BillingServerInterface) registry.lookup(billingBindingname);
+					billingServer = (BillingServerInterface) registry.lookup(billingBindingname);
 			
 		}catch(Exception e){
 			System.out.println("Error in Management client");

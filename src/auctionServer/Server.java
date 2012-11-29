@@ -86,21 +86,25 @@ public class Server
 				BillingServerInterface billingServer = null;
 				
 				try{
-					
-					
-					
 					Registry registry = LocateRegistry.getRegistry(registryHost,registryPort);
 					
 					//analytics server
 					analyticsServer = (AnalyticsInterface) registry.lookup(analyticsBindingName);
-					// billing server
-					billingServer = (BillingServerInterface) registry.lookup(billingBindingName);
-					
-					
 					
 				}catch(Exception e){
 					
-					System.out.println("Error connection to AnalyticsServer or BillingServer" + e);
+					System.out.println("Error connection to AnalyticsServer " + e);
+				}
+				
+				try{
+					Registry registry = LocateRegistry.getRegistry(registryHost,registryPort);
+					
+					// billing server
+					billingServer = (BillingServerInterface) registry.lookup(billingBindingName);
+					
+				}catch(Exception e){
+					
+					System.out.println("Error connection to BillingServer " + e);
 				}
 				
 
@@ -114,7 +118,7 @@ public class Server
 		}
 		catch (Exception e)
 		{
-			System.out.println("Cant login into BillingServer.");
+			System.out.println("Cant login into BillingServer. " + e);
 		}
 		
 		
